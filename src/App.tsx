@@ -14,6 +14,7 @@ import { EmergencySosOverlay } from './components/patient/EmergencySosOverlay';
 import { IncomingPushOverlay } from './components/patient/IncomingPushOverlay';
 import { LiveSimulationBanner } from './components/shared/LiveSimulationBanner';
 import { CaregiverOnboardingModal } from './components/shared/CaregiverOnboardingModal';
+import { CaregiverExpressSetupModal } from './components/shared/CaregiverExpressSetupModal';
 import { PatientFaceRecognitionModal } from './components/shared/PatientFaceRecognitionModal';
 import { PhoneSeparationModal } from './components/shared/PhoneSeparationModal';
 
@@ -22,6 +23,8 @@ const AppContent: React.FC = () => {
     role, 
     isOnboardingOpen, 
     setIsOnboardingOpen, 
+    isExpressSetupOpen,
+    setIsExpressSetupOpen,
     isFaceIdOpen, 
     setIsFaceIdOpen, 
     isPhoneSeparationOpen, 
@@ -29,7 +32,7 @@ const AppContent: React.FC = () => {
   } = useApp();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF7F2] text-[#2C241E] selection:bg-terracotta-200">
+    <div className="min-h-screen flex flex-col bg-[#F8F5ED] text-[#26332F] selection:bg-[#D88965]/20">
       {/* Real-time Global Simulation Notification Banner */}
       <LiveSimulationBanner />
 
@@ -54,7 +57,13 @@ const AppContent: React.FC = () => {
       {/* Caregiver Remote Push Voice Reminder Overlay (Specification 20) */}
       <IncomingPushOverlay />
 
-      {/* First-Time Caregiver Onboarding / Setup Screen Modal */}
+      {/* Option 1: Caregiver Express 1-Min Rapid Setup Modal */}
+      <CaregiverExpressSetupModal
+        isOpen={isExpressSetupOpen}
+        onClose={() => setIsExpressSetupOpen(false)}
+      />
+
+      {/* Option 2: Caregiver Interactive 5-Step Custom Setup Wizard Modal */}
       <CaregiverOnboardingModal 
         isOpen={isOnboardingOpen} 
         onClose={() => setIsOnboardingOpen(false)} 

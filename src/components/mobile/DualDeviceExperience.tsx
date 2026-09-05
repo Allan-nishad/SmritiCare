@@ -249,10 +249,17 @@ export const DualDeviceExperience: React.FC = () => {
           </button>
 
           <button
-            onClick={() => handleQuickSim('caregiver_setup', 'First-Time Caregiver Setup Screen')}
+            onClick={() => handleQuickSim('caregiver_setup_express', 'Option 1: 1-Min Express Setup')}
+            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/50 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            ⚡ Setup Option 1 (1-Min Express)
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('caregiver_setup_custom', 'Option 2: 5-Step Custom Wizard')}
             className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-emerald-300 border border-emerald-500/50 rounded-xl transition active:scale-95 shadow-xs"
           >
-            🧙 1st-Time Setup Screen
+            🛠️ Setup Option 2 (5-Step Wizard)
           </button>
 
           <button

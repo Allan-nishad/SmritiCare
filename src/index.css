@@ -4,11 +4,20 @@
 
 @layer base {
   :root {
-    --sand-bg: #FAF7F2;
-    --terracotta-primary: #D96B43;
-    --sage-accent: #4E7B67;
-    --text-main: #2C241E;
-    --text-muted: #6B5E55;
+    --bg-warm-cream: #F8F5ED;
+    --card-sage-white: #EEF4EC;
+    --primary-forest-green: #356859;
+    --secondary-sage: #A8C3A0;
+    --accent-terracotta: #D88965;
+    --text-deep-charcoal: #26332F;
+    --success-muted-green: #5E9367;
+    --emergency-soft-red: #C95C5C;
+    
+    --sand-bg: #F8F5ED;
+    --terracotta-primary: #D88965;
+    --sage-accent: #356859;
+    --text-main: #26332F;
+    --text-muted: #526861;
   }
 
   body {

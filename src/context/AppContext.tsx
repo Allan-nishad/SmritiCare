@@ -131,6 +131,8 @@ interface AppContextType {
   setActiveSimulation: (sim: { scenario: string; title: string; subtitle: string; timestamp: string; stepDetails: string[] } | null) => void;
   isOnboardingOpen: boolean;
   setIsOnboardingOpen: (open: boolean) => void;
+  isExpressSetupOpen: boolean;
+  setIsExpressSetupOpen: (open: boolean) => void;
   isFaceIdOpen: boolean;
   setIsFaceIdOpen: (open: boolean) => void;
   isPhoneSeparationOpen: boolean;
@@ -148,6 +150,8 @@ interface AppContextType {
     | 'lang_assamese' 
     | 'family_voice_push'
     | 'caregiver_setup'
+    | 'caregiver_setup_express'
+    | 'caregiver_setup_custom'
     | 'face_recognition'
     | 'phone_separation'
   ) => void;
@@ -697,6 +701,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [mobileSubRole, setMobileSubRole] = useState<'patient' | 'caregiver'>('patient');
   const [activeSimulation, setActiveSimulation] = useState<{ scenario: string; title: string; subtitle: string; timestamp: string; stepDetails: string[] } | null>(null);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
+  const [isExpressSetupOpen, setIsExpressSetupOpen] = useState<boolean>(false);
   const [isFaceIdOpen, setIsFaceIdOpen] = useState<boolean>(false);
   const [isPhoneSeparationOpen, setIsPhoneSeparationOpen] = useState<boolean>(false);
 
@@ -1274,6 +1279,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     | 'lang_assamese' 
     | 'family_voice_push'
     | 'caregiver_setup'
+    | 'caregiver_setup_express'
+    | 'caregiver_setup_custom'
     | 'face_recognition'
     | 'phone_separation'
   ) => {
@@ -1490,13 +1497,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         break;
 
       case 'caregiver_setup':
+      case 'caregiver_setup_custom':
         setIsOnboardingOpen(true);
         setActiveSimulation({
-          scenario: 'caregiver_setup',
-          title: '🧙 First-Time Caregiver Setup Wizard (SIH 26003.1)',
-          subtitle: '5-step onboarding: Patient profile, voice calibration, Assamese cultural anchors, geofence, and BLE Smartband pairing.',
+          scenario: 'caregiver_setup_custom',
+          title: '🛠️ Option 2: 5-Step Custom Setup Wizard (SIH 26003.1)',
+          subtitle: 'Interactive step-by-step setup: Custom patient details, voice testing, routine adjustments, geofence radius & wearable pairing.',
           timestamp: nowTime,
-          stepDetails: ['1. Profile & Language', '2. Voice & Cultural Anchors', '3. Geofence & IoT Pairing']
+          stepDetails: ['1. Profile & Language', '2. Voice & Cultural Anchors', '3. Schedule & IoT Pairing']
+        });
+        sounds.playChime();
+        break;
+
+      case 'caregiver_setup_express':
+        setIsExpressSetupOpen(true);
+        setActiveSimulation({
+          scenario: 'caregiver_setup_express',
+          title: '⚡ Option 1: 1-Min Express Setup Pipeline (SIH 26003.1)',
+          subtitle: 'Automated 1-click pipeline: Pre-configures Asha Devi, Assamese dialect, Meera voice note, feeding timetable, geofence & Smartband in 60s.',
+          timestamp: nowTime,
+          stepDetails: ['1. Pre-Configuring Patient Profile', '2. Calibrating Meera Voice Prompt', '3. Arming Geofence & BLE Smartband']
         });
         sounds.playChime();
         break;
@@ -1626,6 +1646,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveSimulation,
         isOnboardingOpen,
         setIsOnboardingOpen,
+        isExpressSetupOpen,
+        setIsExpressSetupOpen,
         isFaceIdOpen,
         setIsFaceIdOpen,
         isPhoneSeparationOpen,
