@@ -10,6 +10,8 @@ import { VoiceAssistantModal } from './components/patient/VoiceAssistantModal';
 import { AlarmOverlay } from './components/patient/AlarmOverlay';
 import { MusicPlayerWidget } from './components/patient/MusicPlayerWidget';
 import { SimulationCenter } from './components/shared/SimulationCenter';
+import { EmergencySosOverlay } from './components/patient/EmergencySosOverlay';
+import { IncomingPushOverlay } from './components/patient/IncomingPushOverlay';
 
 const AppContent: React.FC = () => {
   const { role } = useApp();
@@ -30,6 +32,12 @@ const AppContent: React.FC = () => {
 
       {/* Fullscreen Android-like Interrupting Alarm Overlay (Specification 8 & 9) */}
       <AlarmOverlay />
+
+      {/* Fullscreen SOS 2-Contact Fallback Calling Screen (Specification 15 & 16) */}
+      <EmergencySosOverlay />
+
+      {/* Caregiver Remote Push Voice Reminder Overlay (Specification 20) */}
+      <IncomingPushOverlay />
 
       {/* Persistent Soothing Background Music Player Widget (Specification 23) */}
       <MusicPlayerWidget />

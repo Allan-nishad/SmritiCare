@@ -45,15 +45,23 @@ export const DualDeviceExperience: React.FC = () => {
     setIsOffline, 
     setIsVoiceOpen, 
     language,
-    location
+    location,
+    activePatientTab,
+    setActivePatientTab,
+    triggerSimulation
   } = useApp();
 
   const t = translations[language] || translations.en;
 
-  // Left Phone Tab State (Asha)
-  const [patientTab, setPatientTab] = useState<'home' | 'games' | 'memories' | 'routine' | 'safety'>('home');
   const [showLogsDrawer, setShowLogsDrawer] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [activeToast, setActiveToast] = useState<string | null>(null);
+
+  const handleQuickSim = (scenario: any, label: string) => {
+    triggerSimulation(scenario);
+    setActiveToast(`Simulated: ${label}`);
+    setTimeout(() => setActiveToast(null), 4000);
+  };
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}${window.location.pathname}#dual`;
@@ -74,7 +82,7 @@ export const DualDeviceExperience: React.FC = () => {
     <div className="min-h-[calc(100vh-4rem)] py-6 px-4 sm:px-8 bg-gradient-to-b from-[#141210] via-[#1c1917] to-[#141210] text-white flex flex-col items-center select-none">
       
       {/* Top Clean Presentation Header */}
-      <div className="w-full max-w-6xl mx-auto mb-6 bg-stone-900/90 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 border border-stone-700 shadow-xl flex flex-wrap items-center justify-between gap-3">
+      <div className="w-full max-w-6xl mx-auto mb-4 bg-stone-900/90 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 border border-stone-700 shadow-xl flex flex-wrap items-center justify-between gap-3">
         
         {/* Title */}
         <div className="flex items-center gap-3">
@@ -150,6 +158,97 @@ export const DualDeviceExperience: React.FC = () => {
             className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700 rounded-xl text-xs font-bold transition"
           >
             {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Prominent Evaluator Simulation Quick-Bar */}
+      <div className="w-full max-w-6xl mx-auto mb-6 bg-stone-900/95 backdrop-blur-md rounded-2xl p-3 border-2 border-amber-400/50 shadow-xl space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span>SIH 26003 Interactive Simulation Center (Click any scenario to test live):</span>
+            </span>
+          </div>
+
+          {activeToast && (
+            <span className="text-xs font-bold text-amber-300 bg-amber-400/20 px-2.5 py-0.5 rounded-lg border border-amber-400/40 animate-pulse">
+              ✓ {activeToast}
+            </span>
+          )}
+        </div>
+
+        {/* Action Trigger Pills */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
+          <button
+            onClick={() => handleQuickSim('alarm_medicine', 'Medicine Alarm Overlay')}
+            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/40 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            🔔 Medicine Alarm
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('snooze_x3', 'Snooze 3x Escalation Alert')}
+            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/40 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            ⏳ Snooze 3x Alert
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('sos_fallback', 'SOS 2-Contact Fallback Flow')}
+            className="px-3 py-1.5 bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-500/50 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            🚨 SOS 2-Contact Fallback
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('missing_patient', 'Missing Patient (1.8km Geofence Alert)')}
+            className="px-3 py-1.5 bg-amber-950/80 hover:bg-amber-900 text-amber-200 border border-amber-500/50 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            📍 Missing Patient (1.8km)
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('take_me_home', 'Take Me Home Navigation')}
+            className="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-500/50 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            🧭 Take Me Home
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('game_adaptive_up', 'Adaptive AI Level Up')}
+            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-teal-300 border border-stone-700 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            📈 Adaptive AI (Level Up)
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('smartband_pulse', 'Smartband Pulse')}
+            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-emerald-300 border border-stone-700 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            📡 Smartband Pulse
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('sync_reconcile', '3-Step Offline Sync')}
+            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-blue-300 border border-stone-700 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            🔄 3-Step Offline Sync
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('family_voice_push', 'Priya Voice Reminder Push')}
+            className="px-3 py-1.5 bg-gradient-to-r from-terracotta-600 to-terracotta-700 hover:from-terracotta-700 text-white rounded-xl transition active:scale-95 shadow"
+          >
+            🗣️ Push Voice Reminder
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('lang_assamese', 'Assamese Language')}
+            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-stone-700 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            অসমীয়া Switch
           </button>
         </div>
       </div>
@@ -250,11 +349,11 @@ export const DualDeviceExperience: React.FC = () => {
 
               {/* Patient Content Body */}
               <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3.5 no-scrollbar">
-                {patientTab === 'home' && <MobileHomeTab />}
-                {patientTab === 'games' && <MobileGamesTab />}
-                {patientTab === 'memories' && <MobileMemoriesTab />}
-                {patientTab === 'routine' && <MobileRoutineTab />}
-                {patientTab === 'safety' && <MobileSafetyTab />}
+                {activePatientTab === 'home' && <MobileHomeTab />}
+                {activePatientTab === 'games' && <MobileGamesTab />}
+                {activePatientTab === 'memories' && <MobileMemoriesTab />}
+                {activePatientTab === 'routine' && <MobileRoutineTab />}
+                {activePatientTab === 'safety' && <MobileSafetyTab />}
               </div>
 
               {/* Floating Voice Button */}
@@ -273,52 +372,52 @@ export const DualDeviceExperience: React.FC = () => {
                 <div className="grid grid-cols-5 gap-1 text-center">
                   
                   <button
-                    onClick={() => setPatientTab('home')}
+                    onClick={() => setActivePatientTab('home')}
                     className={`py-1 rounded-lg flex flex-col items-center justify-center gap-0.5 transition ${
-                      patientTab === 'home' ? 'text-terracotta-600 font-bold' : 'text-stone-500'
+                      activePatientTab === 'home' ? 'text-terracotta-600 font-bold' : 'text-stone-500'
                     }`}
                   >
-                    <Home className={`w-4 h-4 ${patientTab === 'home' ? 'stroke-[2.5]' : ''}`} />
+                    <Home className={`w-4 h-4 ${activePatientTab === 'home' ? 'stroke-[2.5]' : ''}`} />
                     <span className="text-[9px] truncate max-w-[55px]">{t.tabHome}</span>
                   </button>
 
                   <button
-                    onClick={() => setPatientTab('games')}
+                    onClick={() => setActivePatientTab('games')}
                     className={`py-1 rounded-lg flex flex-col items-center justify-center gap-0.5 transition ${
-                      patientTab === 'games' ? 'text-terracotta-600 font-bold' : 'text-stone-500'
+                      activePatientTab === 'games' ? 'text-terracotta-600 font-bold' : 'text-stone-500'
                     }`}
                   >
-                    <Brain className={`w-4 h-4 ${patientTab === 'games' ? 'stroke-[2.5]' : ''}`} />
+                    <Brain className={`w-4 h-4 ${activePatientTab === 'games' ? 'stroke-[2.5]' : ''}`} />
                     <span className="text-[9px] truncate max-w-[55px]">{t.tabGames}</span>
                   </button>
 
                   <button
-                    onClick={() => setPatientTab('memories')}
+                    onClick={() => setActivePatientTab('memories')}
                     className={`py-1 rounded-lg flex flex-col items-center justify-center gap-0.5 transition ${
-                      patientTab === 'memories' ? 'text-terracotta-600 font-bold' : 'text-stone-500'
+                      activePatientTab === 'memories' ? 'text-terracotta-600 font-bold' : 'text-stone-500'
                     }`}
                   >
-                    <Heart className={`w-4 h-4 ${patientTab === 'memories' ? 'stroke-[2.5]' : ''}`} />
+                    <Heart className={`w-4 h-4 ${activePatientTab === 'memories' ? 'stroke-[2.5]' : ''}`} />
                     <span className="text-[9px] truncate max-w-[55px]">{t.tabMemories}</span>
                   </button>
 
                   <button
-                    onClick={() => setPatientTab('routine')}
+                    onClick={() => setActivePatientTab('routine')}
                     className={`py-1 rounded-lg flex flex-col items-center justify-center gap-0.5 transition ${
-                      patientTab === 'routine' ? 'text-terracotta-600 font-bold' : 'text-stone-500'
+                      activePatientTab === 'routine' ? 'text-terracotta-600 font-bold' : 'text-stone-500'
                     }`}
                   >
-                    <Calendar className={`w-4 h-4 ${patientTab === 'routine' ? 'stroke-[2.5]' : ''}`} />
+                    <Calendar className={`w-4 h-4 ${activePatientTab === 'routine' ? 'stroke-[2.5]' : ''}`} />
                     <span className="text-[9px] truncate max-w-[55px]">{t.tabRoutine}</span>
                   </button>
 
                   <button
-                    onClick={() => setPatientTab('safety')}
+                    onClick={() => setActivePatientTab('safety')}
                     className={`py-1 rounded-lg flex flex-col items-center justify-center gap-0.5 transition ${
-                      patientTab === 'safety' ? 'text-emerald-700 font-bold' : 'text-stone-500'
+                      activePatientTab === 'safety' ? 'text-emerald-700 font-bold' : 'text-stone-500'
                     }`}
                   >
-                    <ShieldAlert className={`w-4 h-4 ${patientTab === 'safety' ? 'stroke-[2.5] text-emerald-600' : ''}`} />
+                    <ShieldAlert className={`w-4 h-4 ${activePatientTab === 'safety' ? 'stroke-[2.5] text-emerald-600' : ''}`} />
                     <span className="text-[9px] truncate max-w-[55px]">{t.tabSafety}</span>
                   </button>
 

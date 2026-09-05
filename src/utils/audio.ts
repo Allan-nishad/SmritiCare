@@ -89,6 +89,18 @@ class SoundSynthesizer {
     setTimeout(() => this.playTone(480, 'sine', 0.8, 0.18), 50);
   }
 
+  // Soft Chime for notifications
+  playChime() {
+    this.playTone(523.25, 'sine', 0.3, 0.15);
+    setTimeout(() => this.playTone(659.25, 'sine', 0.35, 0.12), 100);
+  }
+
+  // Warning Tone for geofence/safety alerts
+  playWarning() {
+    this.playTone(330, 'sawtooth', 0.25, 0.12);
+    setTimeout(() => this.playTone(293.66, 'sawtooth', 0.3, 0.12), 150);
+  }
+
   // Background Soothing Music Synthesizer (Assamese Flute / Peaceful Chords)
   startBackgroundMusic(trackType: 'folk' | 'flute' | 'river_ambient' | 'bihu' = 'flute') {
     this.initCtx();

@@ -96,6 +96,8 @@ interface AppContextType {
   setActiveGameTab: (tab: 'memory_match' | 'pattern_sequence' | 'word_association' | 'shape_match' | 'mini_sudoku') => void;
   activeSafetyTab: 'overview' | 'location' | 'sos' | 'take_me_home' | 'places';
   setActiveSafetyTab: (tab: 'overview' | 'location' | 'sos' | 'take_me_home' | 'places') => void;
+  activePatientTab: 'home' | 'games' | 'memories' | 'routine' | 'safety';
+  setActivePatientTab: (tab: 'home' | 'games' | 'memories' | 'routine' | 'safety') => void;
 
   // Mobile Prototype Mode
   mobileTab: MobileTab;
@@ -667,6 +669,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isVoiceOpen, setIsVoiceOpen] = useState<boolean>(false);
   const [activeGameTab, setActiveGameTab] = useState<'memory_match' | 'pattern_sequence' | 'word_association' | 'shape_match' | 'mini_sudoku'>('memory_match');
   const [activeSafetyTab, setActiveSafetyTab] = useState<'overview' | 'location' | 'sos' | 'take_me_home' | 'places'>('overview');
+  const [activePatientTab, setActivePatientTab] = useState<'home' | 'games' | 'memories' | 'routine' | 'safety'>('home');
   const [mobileTab, setMobileTab] = useState<MobileTab>('home');
   const [deviceFrame, setDeviceFrame] = useState<DeviceFrameStyle>('iphone');
   const [mobileSubRole, setMobileSubRole] = useState<'patient' | 'caregiver'>('patient');
@@ -1241,16 +1244,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ) => {
     switch (scenario) {
       case 'alarm_medicine':
+        setActivePatientTab('routine');
         triggerAlarm('r1');
         break;
 
       case 'snooze_x3':
+        setActivePatientTab('routine');
         snoozeRoutine('r1');
         setTimeout(() => snoozeRoutine('r1'), 200);
         setTimeout(() => snoozeRoutine('r1'), 400);
         break;
 
       case 'sos_fallback':
+        setActivePatientTab('safety');
+        setActiveSafetyTab('sos');
         startSosFlow();
         break;
 
@@ -1266,6 +1273,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           isLive: true
         });
         setIsMissingPatientScenario(true);
+        setActivePatientTab('safety');
         setActiveSafetyTab('take_me_home');
         
         const locAlert: CaregiverAlert = {
@@ -1280,6 +1288,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           dismissed: false
         };
         setCaregiverAlerts(alerts => [locAlert, ...alerts]);
+        sounds.playWarning();
         addTelemetryLog({
           source: 'ai_engine',
           title: 'Geofence Departure Detected',
@@ -1289,6 +1298,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         break;
 
       case 'take_me_home':
+        setActivePatientTab('safety');
         setActiveSafetyTab('take_me_home');
         speakText("Asha, follow the simple steps on your screen to walk back home safely.", language);
         break;
@@ -1308,6 +1318,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         break;
 
       case 'game_adaptive_up':
+        setActivePatientTab('games');
+        setActiveGameTab('memory_match');
         recordCognitiveSession({
           gameType: 'memory_match',
           gameTitle: 'Familiar Memory Match',
@@ -1324,6 +1336,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             nextGameType: 'memory_match'
           }
         });
+        sounds.playSuccess();
         break;
 
       case 'smartband_pulse':
@@ -1333,6 +1346,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           heartRateBpm: 76,
           activityLevel: 'Active'
         }));
+        sounds.playChime();
         addTelemetryLog({
           source: 'ai_engine',
           title: 'Smartband Telemetry Updated',
@@ -1348,10 +1362,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       case 'family_voice_push':
         sendPushReminder({
-          text: "Ma, remember to drink your warm lemon water before lunch!",
+          text: "Ma, please drink a warm cup of water and take your medicine. Priya is with you.",
           category: 'hydration',
-          senderName: 'Meera (Daughter)',
-          voiceNoteText: "Ma, this is Meera. Please drink your warm water now. I love you!"
+          senderName: 'Priya (Caregiver)',
+          voiceNoteText: "Ma, this is Priya. Please drink your warm water now. We are right here with you."
         });
         break;
     }
@@ -1414,6 +1428,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveGameTab,
         activeSafetyTab,
         setActiveSafetyTab,
+        activePatientTab,
+        setActivePatientTab,
         mobileTab,
         setMobileTab,
         deviceFrame,
