@@ -86,25 +86,25 @@ export const DualDeviceExperience: React.FC = () => {
   return (
     <div className="min-h-[calc(100vh-4rem)] py-6 px-4 sm:px-8 bg-gradient-to-b from-[#141210] via-[#1c1917] to-[#141210] text-white flex flex-col items-center select-none">
       
-      {/* Top Clean Presentation Header */}
-      <div className="w-full max-w-6xl mx-auto mb-4 bg-stone-900/90 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 border border-stone-700 shadow-xl flex flex-wrap items-center justify-between gap-3">
+      {/* Top Experience Header */}
+      <div className="w-full max-w-6xl mx-auto mb-4 bg-[#26332F]/90 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-[#A8C3A0]/50 shadow-lg flex flex-wrap items-center justify-between gap-3">
         
-        {/* Title */}
+        {/* Title & Live Status */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-terracotta-600 to-amber-500 text-white flex items-center justify-center font-black shadow-md shadow-terracotta-500/20">
-            <Zap className="w-5 h-5 fill-white" />
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#356859] to-[#5E9367] text-white flex items-center justify-center font-bold shadow-md">
+            <Smartphone className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-extrabold text-base sm:text-lg text-stone-100 font-serif">
+              <h2 className="font-extrabold text-sm sm:text-base text-white font-serif">
                 SmritiCare Dual-Device Presentation
               </h2>
-              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="bg-[#356859] text-white border border-[#A8C3A0]/50 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#5E9367] animate-pulse" />
                 <span>Live Sync Active</span>
               </span>
             </div>
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-[#EEF4EC]/70">
               Asha Devi (Patient Mobile) & Priya (Caregiver Hub) communicating with zero latency.
             </p>
           </div>
@@ -117,18 +117,18 @@ export const DualDeviceExperience: React.FC = () => {
             onClick={() => setIsOffline(!isOffline)}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border ${
               isOffline
-                ? 'bg-amber-500/25 text-amber-300 border-amber-400/50 ring-1 ring-amber-400'
-                : 'bg-stone-800 text-stone-300 border-stone-700 hover:text-white'
+                ? 'bg-[#D88965]/30 text-[#EEF4EC] border-[#D88965] ring-1 ring-[#D88965]'
+                : 'bg-[#356859] text-white border-[#A8C3A0]/40 hover:bg-[#2C574A]'
             }`}
           >
-            {isOffline ? <WifiOff className="w-3.5 h-3.5 text-amber-400" /> : <Wifi className="w-3.5 h-3.5 text-emerald-400" />}
+            {isOffline ? <WifiOff className="w-3.5 h-3.5 text-[#D88965]" /> : <Wifi className="w-3.5 h-3.5 text-[#5E9367]" />}
             <span>{isOffline ? 'Offline Active' : 'Online'}</span>
           </button>
 
           {/* Popout Windows */}
           <button
             onClick={openPatientTab}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-terracotta-300 border border-stone-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#D88965] border border-[#A8C3A0]/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
             title="Open Asha's phone in a separate window"
           >
             <span>👵 Asha Phone</span>
@@ -137,7 +137,7 @@ export const DualDeviceExperience: React.FC = () => {
 
           <button
             onClick={openCaregiverTab}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-sage-300 border border-stone-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
             title="Open Priya's hub in a separate window"
           >
             <span>👩‍⚕️ Priya Hub</span>
@@ -149,8 +149,8 @@ export const DualDeviceExperience: React.FC = () => {
             onClick={() => setShowLogsDrawer(!showLogsDrawer)}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border ${
               showLogsDrawer
-                ? 'bg-amber-400 text-stone-950 border-amber-300'
-                : 'bg-stone-800 text-stone-300 border-stone-700 hover:text-white'
+                ? 'bg-[#D88965] text-white border-[#D88965]'
+                : 'bg-[#1A2320] text-[#EEF4EC] border-[#A8C3A0]/40 hover:bg-[#356859]'
             }`}
           >
             <ListFilter className="w-3.5 h-3.5" />
@@ -160,25 +160,25 @@ export const DualDeviceExperience: React.FC = () => {
 
           <button
             onClick={handleCopyLink}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700 rounded-xl text-xs font-bold transition"
+            className="px-3 py-1.5 bg-[#356859] hover:bg-[#2C574A] text-white border border-[#A8C3A0]/40 rounded-xl text-xs font-bold transition"
           >
-            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copiedLink ? <Check className="w-3.5 h-3.5 text-[#5E9367]" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
 
       {/* Prominent Evaluator Simulation Quick-Bar */}
-      <div className="w-full max-w-6xl mx-auto mb-6 bg-stone-900/95 backdrop-blur-md rounded-2xl p-3 border-2 border-amber-400/50 shadow-xl space-y-2">
+      <div className="w-full max-w-6xl mx-auto mb-6 bg-[#26332F]/95 backdrop-blur-md rounded-2xl p-3 border-2 border-[#A8C3A0]/60 shadow-xl space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[11px] font-black uppercase tracking-wider text-[#A8C3A0] flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-[#D88965]" />
               <span>SIH 26003 Interactive Simulation Center (Click any scenario to test live):</span>
             </span>
           </div>
 
           {activeToast && (
-            <span className="text-xs font-bold text-amber-300 bg-amber-400/20 px-2.5 py-0.5 rounded-lg border border-amber-400/40 animate-pulse">
+            <span className="text-xs font-bold text-[#EEF4EC] bg-[#356859] px-2.5 py-0.5 rounded-lg border border-[#A8C3A0]/50 animate-pulse">
               ✓ {activeToast}
             </span>
           )}
@@ -188,98 +188,98 @@ export const DualDeviceExperience: React.FC = () => {
         <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
           <button
             onClick={() => handleQuickSim('alarm_medicine', 'Medicine Alarm Overlay')}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/40 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#D88965] border border-[#D88965]/40 rounded-xl transition active:scale-95 shadow-xs"
           >
             🔔 Medicine Alarm
           </button>
 
           <button
             onClick={() => handleQuickSim('snooze_x3', 'Snooze 3x Escalation Alert')}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/40 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#D88965] border border-[#D88965]/40 rounded-xl transition active:scale-95 shadow-xs"
           >
             ⏳ Snooze 3x Alert
           </button>
 
           <button
             onClick={() => handleQuickSim('sos_fallback', 'SOS 2-Contact Fallback Flow')}
-            className="px-3 py-1.5 bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-500/50 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#C95C5C]/20 hover:bg-[#C95C5C]/40 text-[#FCECEC] border border-[#C95C5C]/60 rounded-xl transition active:scale-95 shadow-xs"
           >
             🚨 SOS 2-Contact Fallback
           </button>
 
           <button
             onClick={() => handleQuickSim('missing_patient', 'Missing Patient (1.8km Geofence Alert)')}
-            className="px-3 py-1.5 bg-amber-950/80 hover:bg-amber-900 text-amber-200 border border-amber-500/50 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#D88965]/20 hover:bg-[#D88965]/40 text-[#EEF4EC] border border-[#D88965]/60 rounded-xl transition active:scale-95 shadow-xs"
           >
             📍 Missing Patient (1.8km)
           </button>
 
           <button
             onClick={() => handleQuickSim('take_me_home', 'Take Me Home Navigation')}
-            className="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-500/50 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#5E9367]/20 hover:bg-[#5E9367]/40 text-[#EAF3EC] border border-[#5E9367]/60 rounded-xl transition active:scale-95 shadow-xs"
           >
             🧭 Take Me Home
           </button>
 
           <button
             onClick={() => handleQuickSim('game_adaptive_up', 'Adaptive AI Level Up')}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-teal-300 border border-stone-700 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl transition active:scale-95 shadow-xs"
           >
             📈 Adaptive AI (Level Up)
           </button>
 
           <button
             onClick={() => handleQuickSim('smartband_pulse', 'Smartband Pulse')}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-emerald-300 border border-stone-700 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#5E9367] border border-[#5E9367]/40 rounded-xl transition active:scale-95 shadow-xs"
           >
             📡 Smartband Pulse
           </button>
 
           <button
             onClick={() => handleQuickSim('sync_reconcile', '3-Step Offline Sync')}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-blue-300 border border-stone-700 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl transition active:scale-95 shadow-xs"
           >
             🔄 3-Step Offline Sync
           </button>
 
           <button
             onClick={() => handleQuickSim('family_voice_push', 'Priya Voice Reminder Push')}
-            className="px-3 py-1.5 bg-gradient-to-r from-terracotta-600 to-terracotta-700 hover:from-terracotta-700 text-white rounded-xl transition active:scale-95 shadow"
+            className="px-3 py-1.5 bg-[#D88965] hover:bg-[#C4724D] text-white rounded-xl transition active:scale-95 shadow-sm"
           >
             🗣️ Push Voice Reminder
           </button>
 
           <button
             onClick={() => handleQuickSim('caregiver_setup_express', 'Option 1: 1-Min Express Setup')}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/50 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl transition active:scale-95 shadow-xs"
           >
             ⚡ Setup Option 1 (1-Min Express)
           </button>
 
           <button
             onClick={() => handleQuickSim('caregiver_setup_custom', 'Option 2: 5-Step Custom Wizard')}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-emerald-300 border border-emerald-500/50 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#5E9367] border border-[#5E9367]/40 rounded-xl transition active:scale-95 shadow-xs"
           >
             🛠️ Setup Option 2 (5-Step Wizard)
           </button>
 
           <button
             onClick={() => handleQuickSim('face_recognition', 'Patient Face ID Access')}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/50 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl transition active:scale-95 shadow-xs"
           >
             📷 Patient Face ID
           </button>
 
           <button
             onClick={() => handleQuickSim('phone_separation', 'Smartband Phone Separation Alert')}
-            className="px-3 py-1.5 bg-red-900/90 hover:bg-red-800 text-red-100 border border-red-500/60 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#C95C5C]/30 hover:bg-[#C95C5C]/50 text-[#FCECEC] border border-[#C95C5C]/60 rounded-xl transition active:scale-95 shadow-xs"
           >
-            ⚠️ Phone Separation Alert
+            📳 Phone Separation Alert
           </button>
 
           <button
             onClick={() => handleQuickSim('lang_assamese', 'Assamese Language')}
-            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-stone-700 rounded-xl transition active:scale-95 shadow-xs"
+            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl transition active:scale-95 shadow-xs"
           >
             অসমীয়া Switch
           </button>

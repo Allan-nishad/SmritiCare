@@ -86,10 +86,10 @@ export const CaregiverOnboardingModal: React.FC<CaregiverOnboardingModalProps> =
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 select-none animate-in fade-in">
-      <div className="bg-white rounded-[2.5rem] max-w-2xl w-full border-2 border-sand-300 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-[#F8F5ED] rounded-[2.5rem] max-w-2xl w-full border-2 border-[#A8C3A0]/60 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
-        {/* Header */}
-        <div className="bg-gradient-to-r from-sage-800 via-stone-900 to-sage-900 text-white p-6 sm:p-7 relative shrink-0">
+        {/* Header in Deep Forest Green */}
+        <div className="bg-[#356859] text-white p-6 sm:p-7 relative shrink-0">
           <button
             onClick={onClose}
             className="absolute top-6 right-6 p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition"
@@ -97,15 +97,15 @@ export const CaregiverOnboardingModal: React.FC<CaregiverOnboardingModalProps> =
             <X className="w-5 h-5" />
           </button>
 
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-bold text-emerald-300 mb-2 border border-white/20">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>SIH 26003 • First-Time Caregiver Onboarding Wizard</span>
+          <div className="inline-flex items-center gap-2 bg-[#A8C3A0]/30 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-bold text-white mb-2 border border-white/20">
+            <Sparkles className="w-3.5 h-3.5 text-[#D88965]" />
+            <span>Option 2: 5-Step Custom Setup Wizard</span>
           </div>
 
           <h3 className="text-2xl sm:text-3xl font-extrabold font-serif">
             Setup Caregiver Hub for Asha Devi
           </h3>
-          <p className="text-xs sm:text-sm text-sage-200 mt-1 font-medium">
+          <p className="text-xs sm:text-sm text-[#A8C3A0] mt-1 font-medium">
             Step {currentStep} of 5 • Tailoring dementia assistance & sensory familiarity
           </p>
 
@@ -116,9 +116,9 @@ export const CaregiverOnboardingModal: React.FC<CaregiverOnboardingModalProps> =
                 key={s}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   s === currentStep
-                    ? 'w-10 bg-amber-400'
+                    ? 'w-10 bg-[#D88965]'
                     : s < currentStep
-                    ? 'w-4 bg-emerald-400'
+                    ? 'w-4 bg-[#5E9367]'
                     : 'w-4 bg-white/30'
                 }`}
               />
@@ -127,7 +127,7 @@ export const CaregiverOnboardingModal: React.FC<CaregiverOnboardingModalProps> =
         </div>
 
         {/* Body Content */}
-        <div className="p-6 sm:p-8 overflow-y-auto space-y-6 flex-1 text-stone-900">
+        <div className="p-6 sm:p-8 overflow-y-auto space-y-6 flex-1 text-[#26332F]">
           
           {/* STEP 1: PATIENT IDENTITY */}
           {currentStep === 1 && (
@@ -348,15 +348,15 @@ export const CaregiverOnboardingModal: React.FC<CaregiverOnboardingModalProps> =
         </div>
 
         {/* Footer Navigation Controls */}
-        <div className="p-6 bg-sand-100 border-t border-sand-200 flex items-center justify-between shrink-0">
+        <div className="p-6 bg-[#EEF4EC] border-t border-[#A8C3A0]/40 flex items-center justify-between shrink-0">
           <button
             type="button"
             onClick={handlePrev}
             disabled={currentStep === 1}
             className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition ${
               currentStep === 1
-                ? 'opacity-30 cursor-not-allowed text-stone-400'
-                : 'bg-white hover:bg-sand-200 text-stone-800 shadow-sm'
+                ? 'opacity-30 cursor-not-allowed text-[#526861]'
+                : 'bg-white hover:bg-[#F8F5ED] text-[#26332F] border border-[#A8C3A0]/50 shadow-xs'
             }`}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -366,10 +366,10 @@ export const CaregiverOnboardingModal: React.FC<CaregiverOnboardingModalProps> =
           <button
             type="button"
             onClick={handleNext}
-            className="px-6 py-2.5 bg-stone-900 hover:bg-black text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition active:scale-95 flex items-center gap-2"
+            className="px-6 py-2.5 bg-[#356859] hover:bg-[#2C574A] text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition active:scale-95 flex items-center gap-2"
           >
             <span>{currentStep === 5 ? 'Complete Onboarding & Launch' : 'Next Step'}</span>
-            <ArrowRight className="w-4 h-4 text-amber-300" />
+            <ArrowRight className="w-4 h-4 text-[#A8C3A0]" />
           </button>
         </div>
 

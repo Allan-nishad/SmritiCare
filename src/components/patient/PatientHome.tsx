@@ -121,16 +121,16 @@ export const PatientHome: React.FC = () => {
       )}
 
       {/* 2. Orientation Header (Specification 22: Day, Date, Time, Location, Next up) */}
-      <div className="bg-gradient-to-br from-[#df724b] via-[#c95d36] to-[#b34c26] rounded-[2.5rem] p-6 sm:p-10 text-white shadow-touch relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#356859] via-[#2C574A] to-[#1B352D] rounded-[2.5rem] p-6 sm:p-10 text-white shadow-soft relative overflow-hidden border border-[#A8C3A0]/30">
         <div className="relative z-10 space-y-4">
           
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold text-white border border-white/20">
-              <Calendar className="w-4 h-4 text-amber-300" />
+            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold text-white border border-white/20">
+              <Calendar className="w-4 h-4 text-[#A8C3A0]" />
               <span>{currentDateStr || t.todayLabel}</span>
             </div>
 
-            <div className="inline-flex items-center gap-2 bg-stone-950/40 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-mono font-bold text-amber-300 border border-white/10">
+            <div className="inline-flex items-center gap-2 bg-black/30 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-mono font-bold text-[#A8C3A0] border border-white/10">
               <Clock className="w-4 h-4" />
               <span>{currentTimeStr || '10:30 AM'}</span>
             </div>
@@ -138,26 +138,26 @@ export const PatientHome: React.FC = () => {
 
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-xs sm:text-sm uppercase tracking-widest font-black text-amber-200 block">
+              <span className="text-xs sm:text-sm uppercase tracking-widest font-black text-[#A8C3A0] block">
                 {t.greetingMorning}
               </span>
-              <h1 className="text-3xl sm:text-5xl font-black font-serif tracking-tight leading-tight mt-1">
+              <h1 className="text-3xl sm:text-5xl font-black font-serif tracking-tight leading-tight mt-1 text-white">
                 Asha Devi
               </h1>
             </div>
 
             <button
               onClick={handleReadOrientation}
-              className="p-3 sm:p-4 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-2xl font-bold flex items-center gap-2 border border-white/30 transition active:scale-95"
+              className="p-3 sm:p-4 bg-white/15 hover:bg-white/25 backdrop-blur-md text-white rounded-2xl font-bold flex items-center gap-2 border border-white/30 transition active:scale-95"
               title={t.listenGreeting}
             >
-              <Volume2 className="w-6 h-6 sm:w-7 sm:h-7 text-amber-300" />
+              <Volume2 className="w-6 h-6 sm:w-7 sm:h-7 text-[#D88965]" />
               <span className="text-xs sm:text-sm hidden sm:inline">{t.listenAloudLabel}</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-2.5 text-sm sm:text-base text-terracotta-100 font-medium">
-            <MapPin className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0" />
+          <div className="flex items-center gap-2.5 text-sm sm:text-base text-[#EEF4EC] font-medium">
+            <MapPin className="w-5 h-5 text-[#D88965] fill-[#D88965] shrink-0" />
             <span>{t.locationLabel}</span>
           </div>
 
@@ -170,25 +170,25 @@ export const PatientHome: React.FC = () => {
                 const el = document.getElementById('patient-games-view');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="bg-white hover:bg-sand-50 text-terracotta-800 font-black px-6 py-4 rounded-2xl text-base shadow-xl transition-all active:scale-95 flex items-center gap-2.5 border-2 border-white"
+              className="bg-[#D88965] hover:bg-[#C4724D] text-white font-black px-6 py-4 rounded-2xl text-base shadow-md transition-all active:scale-95 flex items-center gap-2.5"
             >
-              <Play className="w-5 h-5 fill-terracotta-600 text-terracotta-600" />
+              <Play className="w-5 h-5 fill-white" />
               <span>{t.startActivityBtn}</span>
             </button>
 
             <button
               onClick={() => setIsVoiceOpen(true)}
-              className="bg-stone-900/90 hover:bg-black text-white font-black px-6 py-4 rounded-2xl text-base backdrop-blur-md transition-all active:scale-95 flex items-center gap-2.5 border border-white/20 shadow-xl"
+              className="bg-[#EEF4EC] hover:bg-white text-[#26332F] font-black px-6 py-4 rounded-2xl text-base shadow-md transition-all active:scale-95 flex items-center gap-2.5"
             >
-              <Mic className="w-5 h-5 text-amber-300 animate-pulse" />
+              <Mic className="w-5 h-5 text-[#D88965] animate-pulse" />
               <span>{t.talkToSmritiBtn}</span>
             </button>
 
             <button
               onClick={() => setSelectedMainSection('safety')}
-              className="bg-emerald-700/80 hover:bg-emerald-800 text-white font-black px-5 py-4 rounded-2xl text-base backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 border border-white/20 shadow-xl"
+              className="bg-[#5E9367] hover:bg-[#436B4A] text-white font-black px-5 py-4 rounded-2xl text-base shadow-md transition-all active:scale-95 flex items-center gap-2"
             >
-              <Compass className="w-5 h-5 text-emerald-300" />
+              <Compass className="w-5 h-5 text-white" />
               <span>{t.safetyCenterTitle}</span>
             </button>
           </div>
@@ -197,22 +197,22 @@ export const PatientHome: React.FC = () => {
 
       {/* 3. Next Up Routine Tile (Large touch targets & Voice instruction) */}
       {rawRoutine && nextRoutine && (
-        <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border-2 border-sand-200 shadow-soft space-y-4">
+        <div className="bg-[#EEF4EC] rounded-[2.5rem] p-6 sm:p-8 border-2 border-[#A8C3A0]/60 shadow-soft space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-wider text-terracotta-700">
-              <Pill className="w-5 h-5 text-terracotta-600" />
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-wider text-[#356859]">
+              <Pill className="w-5 h-5 text-[#D88965]" />
               <span>{t.nextUpLabel}</span>
             </div>
-            <span className="text-xs sm:text-sm font-black text-amber-900 bg-amber-100 px-4 py-1.5 rounded-full border border-amber-200">
+            <span className="text-xs sm:text-sm font-black text-[#356859] bg-white px-4 py-1.5 rounded-full border border-[#A8C3A0]/60">
               {rawRoutine.time}
             </span>
           </div>
 
           <div>
-            <h3 className="text-2xl sm:text-3xl font-black text-stone-900 leading-snug">
+            <h3 className="text-2xl sm:text-3xl font-black text-[#26332F] leading-snug">
               {nextRoutine.title}
             </h3>
-            <p className="text-sm sm:text-base text-stone-600 mt-1 font-medium">
+            <p className="text-sm sm:text-base text-[#526861] mt-1 font-medium">
               {nextRoutine.subtitle}
             </p>
           </div>
@@ -220,19 +220,19 @@ export const PatientHome: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={handleReadRoutine}
-              className="py-4 px-6 bg-sand-100 hover:bg-sand-200 text-stone-800 rounded-2xl font-bold flex items-center justify-center gap-2 transition active:scale-95"
+              className="py-4 px-6 bg-white hover:bg-[#F8F5ED] text-[#26332F] border border-[#A8C3A0]/60 rounded-2xl font-bold flex items-center justify-center gap-2 transition active:scale-95"
               title={t.listenAloudLabel}
             >
-              <Volume2 className="w-7 h-7 text-terracotta-600" />
+              <Volume2 className="w-7 h-7 text-[#D88965]" />
               <span className="text-sm font-bold">{t.listenAloudLabel}</span>
             </button>
 
             <button
               onClick={() => toggleRoutine(rawRoutine.id)}
-              className={`flex-1 py-5 px-6 rounded-2xl font-black text-lg sm:text-xl flex items-center justify-center gap-3 shadow-lg transition active:scale-95 ${
+              className={`flex-1 py-5 px-6 rounded-2xl font-black text-lg sm:text-xl flex items-center justify-center gap-3 shadow-md transition active:scale-95 ${
                 rawRoutine.completed
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gradient-to-r from-terracotta-500 to-terracotta-600 hover:from-terracotta-600 text-white'
+                  ? 'bg-[#5E9367] text-white'
+                  : 'bg-[#D88965] hover:bg-[#C4724D] text-white'
               }`}
             >
               <CheckCircle2 className="w-7 h-7 stroke-[2.5]" />
@@ -246,20 +246,20 @@ export const PatientHome: React.FC = () => {
       <section id="patient-games-view" className="scroll-mt-24 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-stone-900 font-serif">
+            <h2 className="text-2xl sm:text-3xl font-black text-[#26332F] font-serif">
               {t.tabGames}
             </h2>
-            <p className="text-xs sm:text-sm text-stone-600 font-medium">
+            <p className="text-xs sm:text-sm text-[#526861] font-medium">
               {t.gameInstructionsMemory}
             </p>
           </div>
 
           {/* 5 Game Categories Selector */}
-          <div className="flex items-center gap-1.5 bg-sand-200 p-1.5 rounded-2xl overflow-x-auto no-scrollbar max-w-full">
+          <div className="flex items-center gap-1.5 bg-[#EEF4EC] p-1.5 rounded-2xl border border-[#A8C3A0]/50 overflow-x-auto no-scrollbar max-w-full">
             <button
               onClick={() => setActiveGameTab('memory_match')}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${
-                activeGameTab === 'memory_match' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
+                activeGameTab === 'memory_match' ? 'bg-[#356859] text-white shadow-xs' : 'text-[#26332F] hover:text-[#356859]'
               }`}
             >
               {t.gameMemoryTitle}
@@ -267,7 +267,7 @@ export const PatientHome: React.FC = () => {
             <button
               onClick={() => setActiveGameTab('pattern_sequence')}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${
-                activeGameTab === 'pattern_sequence' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
+                activeGameTab === 'pattern_sequence' ? 'bg-[#356859] text-white shadow-xs' : 'text-[#26332F] hover:text-[#356859]'
               }`}
             >
               {t.gamePatternTitle}
@@ -275,7 +275,7 @@ export const PatientHome: React.FC = () => {
             <button
               onClick={() => setActiveGameTab('word_association')}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${
-                activeGameTab === 'word_association' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
+                activeGameTab === 'word_association' ? 'bg-[#356859] text-white shadow-xs' : 'text-[#26332F] hover:text-[#356859]'
               }`}
             >
               {t.gameAssociationTitle}
@@ -283,7 +283,7 @@ export const PatientHome: React.FC = () => {
             <button
               onClick={() => setActiveGameTab('shape_match')}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${
-                activeGameTab === 'shape_match' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
+                activeGameTab === 'shape_match' ? 'bg-[#356859] text-white shadow-xs' : 'text-[#26332F] hover:text-[#356859]'
               }`}
             >
               {t.gameShapeTitle}
@@ -291,7 +291,7 @@ export const PatientHome: React.FC = () => {
             <button
               onClick={() => setActiveGameTab('mini_sudoku')}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${
-                activeGameTab === 'mini_sudoku' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
+                activeGameTab === 'mini_sudoku' ? 'bg-[#356859] text-white shadow-xs' : 'text-[#26332F] hover:text-[#356859]'
               }`}
             >
               {t.gameSudokuTitle}
@@ -299,7 +299,7 @@ export const PatientHome: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-4 sm:p-6 border-2 border-sand-200 shadow-soft">
+        <div className="bg-[#EEF4EC] rounded-[2.5rem] p-4 sm:p-6 border-2 border-[#A8C3A0]/60 shadow-soft">
           {activeGameTab === 'memory_match' && <MemoryMatchGame />}
           {activeGameTab === 'pattern_sequence' && <PatternSequenceGame />}
           {activeGameTab === 'word_association' && <AssociationGame />}
