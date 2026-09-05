@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
+import { sounds, speakText } from '../../../utils/audio';
+import confetti from 'canvas-confetti';
 import { 
   Activity, 
   TrendingUp, 
@@ -19,7 +21,18 @@ import {
   Bell, 
   Volume2, 
   Check, 
-  ArrowUpRight
+  ArrowUpRight,
+  User,
+  Watch,
+  Moon,
+  BatteryCharging,
+  Thermometer,
+  Home,
+  Plus,
+  Users,
+  MapPin,
+  Utensils,
+  PhoneCall
 } from 'lucide-react';
 
 export const MobileCaregiverTab: React.FC = () => {
@@ -29,6 +42,12 @@ export const MobileCaregiverTab: React.FC = () => {
     caregiverAlerts, 
     dismissAlert, 
     markAlertAction, 
+    routines,
+    familyMemories,
+    addRoutineItem,
+    addFamilyMemory,
+    smartbandMetrics,
+    location,
     isOffline,
     setIsOffline,
     isSyncing, 
@@ -41,15 +60,33 @@ export const MobileCaregiverTab: React.FC = () => {
     setRole
   } = useApp();
 
+  // 2 Master Pages inside Mobile Caregiver Hub
+  const [activeMobilePage, setActiveMobilePage] = useState<'performance' | 'patient_info'>('performance');
+
   const [customText, setCustomText] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [justSentPreset, setJustSentPreset] = useState<string | null>(null);
+
+  // Form states for feeding data in Mobile Page 2
+  const [newRoutineTime, setNewRoutineTime] = useState('03:30 PM');
+  const [newRoutineTitle, setNewRoutineTitle] = useState('');
+  const [newRoutineCategory, setNewRoutineCategory] = useState<'medicine' | 'hydration' | 'meal' | 'activity' | 'walk' | 'family'>('hydration');
+  const [formSuccessMessage, setFormSuccessMessage] = useState('');
+
+  const activeAlerts = caregiverAlerts.filter(a => !a.dismissed);
+  const highPriorityAlerts = activeAlerts.filter(a => 
+    a.significance === 'High Priority' || 
+    a.type === 'sos' || 
+    a.type === 'snooze_warning' || 
+    a.title.toLowerCase().includes('warning') || 
+    a.title.toLowerCase().includes('geofence')
+  );
 
   const presets = [
     {
       id: 'p_med',
       label: '💊 Morning BP Medicine',
-      text: 'Ma, please take your morning blood pressure medicine with a cup of warm water.',
+      text: 'Ma, please take your morning blood pressure medicine with warm water.',
       voiceNoteText: 'Ma, remember to take your blood pressure medicine with warm water. I love you!',
       category: 'medicine' as const
     },
@@ -62,15 +99,15 @@ export const MobileCaregiverTab: React.FC = () => {
     },
     {
       id: 'p_walk',
-      label: '🚶 Courtyard Garden Walk',
-      text: 'Ma, time for a gentle 10-minute stroll on the veranda to enjoy the orchids.',
-      voiceNoteText: 'Ma, let us take a gentle walk outside to see the fresh marigold flowers.',
+      label: '🌿 Veranda Garden Rest',
+      text: 'Ma, time for a gentle rest on the veranda to enjoy the fresh breeze.',
+      voiceNoteText: 'Ma, let us take a gentle rest on the veranda outside.',
       category: 'walk' as const
     },
     {
       id: 'p_lunch',
-      label: '🍵 Traditional Meal & Tea',
-      text: 'Ma, fresh Joha rice and warm Assam tea are ready for you in the dining room.',
+      label: '🍵 Traditional Joha Rice',
+      text: 'Ma, fresh Joha rice and warm Assam tea are ready for you.',
       voiceNoteText: 'Ma, lunch and fresh tea are served for you.',
       category: 'meal' as const
     }
@@ -102,251 +139,489 @@ export const MobileCaregiverTab: React.FC = () => {
     setTimeout(() => setJustSentPreset(null), 2500);
   };
 
+  const handleAddQuickRoutine = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoutineTitle) return;
+
+    sounds.playSuccess();
+    confetti({ particleCount: 30, spread: 40 });
+
+    addRoutineItem({
+      time: newRoutineTime,
+      title: newRoutineTitle,
+      subtitle: 'Added from Priya Companion App',
+      category: newRoutineCategory,
+      priority: 'important',
+      icon: newRoutineCategory === 'hydration' ? 'Droplets' : 'Heart'
+    });
+
+    setNewRoutineTitle('');
+    setFormSuccessMessage(`✓ Added "${newRoutineTitle}" synced to Asha!`);
+    setTimeout(() => setFormSuccessMessage(''), 3500);
+  };
+
   return (
-    <div className="space-y-4 text-stone-900 select-none animate-in fade-in pb-4">
+    <div className="space-y-3.5 text-stone-900 select-none animate-in fade-in pb-4">
       
-      {/* 1. Real-time Asha Acknowledged Toast Alert */}
+      {/* Real-time Asha Acknowledged Toast Alert */}
       {latestPushAcknowledgement && (
-        <div className="bg-emerald-600 text-white p-3.5 rounded-2xl shadow-xl border-2 border-emerald-300 flex items-center gap-2.5 animate-in slide-in-from-top duration-300">
-          <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <Check className="w-5 h-5 stroke-[3] text-white" />
+        <div className="bg-emerald-600 text-white p-3 rounded-2xl shadow-lg border-2 border-emerald-300 flex items-center gap-2 animate-in slide-in-from-top duration-300">
+          <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+            <Check className="w-4 h-4 stroke-[3] text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-extrabold text-xs">Asha Confirmed Just Now!</div>
-            <div className="text-[11px] text-emerald-100 truncate">{latestPushAcknowledgement}</div>
+            <div className="font-extrabold text-[11px]">Asha Confirmed Just Now!</div>
+            <div className="text-[10px] text-emerald-100 truncate">{latestPushAcknowledgement}</div>
           </div>
         </div>
       )}
 
-      {/* 2. Caregiver Header & Live Status */}
-      <div className="bg-gradient-to-br from-sage-800 to-stone-900 text-white rounded-3xl p-4 shadow-md space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-sage-500/30 border border-sage-400/40 text-sage-300 flex items-center justify-center">
-              <Activity className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-sm font-extrabold text-stone-100">Priya's Companion Hub</div>
-              <div className="text-[11px] text-stone-300">Asha Devi (Mother-in-law)</div>
+      {/* 2-PAGE MASTER TABS SWITCHER */}
+      <div className="flex p-1 bg-sand-200 rounded-xl border border-sand-300 shadow-inner">
+        <button
+          onClick={() => setActiveMobilePage('performance')}
+          className={`flex-1 py-2 px-2 rounded-lg text-[11px] font-black transition-all flex items-center justify-center gap-1 ${
+            activeMobilePage === 'performance'
+              ? 'bg-white text-stone-900 shadow-sm'
+              : 'text-stone-600 hover:text-stone-900'
+          }`}
+        >
+          <Activity className="w-3.5 h-3.5 text-terracotta-600" />
+          <span>1. 📊 Health & Alerts</span>
+        </button>
+
+        <button
+          onClick={() => setActiveMobilePage('patient_info')}
+          className={`flex-1 py-2 px-2 rounded-lg text-[11px] font-black transition-all flex items-center justify-center gap-1 ${
+            activeMobilePage === 'patient_info'
+              ? 'bg-white text-stone-900 shadow-sm'
+              : 'text-stone-600 hover:text-stone-900'
+          }`}
+        >
+          <User className="w-3.5 h-3.5 text-sage-600" />
+          <span>2. 🗂️ Info & Feeding</span>
+        </button>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* PAGE 1: PERFORMANCE, SMART WEARABLES & RED ALERTS                        */}
+      {/* ========================================================================= */}
+      {activeMobilePage === 'performance' && (
+        <div className="space-y-3.5 animate-in fade-in">
+          
+          {/* Live Sync Status */}
+          <div className={`p-2.5 rounded-2xl border text-xs transition ${
+            isOffline 
+              ? 'bg-amber-500/15 border-amber-400 text-amber-950' 
+              : isSyncing 
+              ? 'bg-blue-500/15 border-blue-400 text-blue-950' 
+              : 'bg-emerald-500/15 border-emerald-400 text-emerald-950'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[9px] text-stone-600 uppercase font-bold">
+                  {isOffline ? '⚠️ Patient Offline' : isSyncing ? '⚡ Syncing Offline Pipeline' : '🟢 Real-Time Telemetry'}
+                </div>
+                <div className="font-extrabold text-[11px]">
+                  {isOffline 
+                    ? `${syncQueue.length} Updates Cached Locally` 
+                    : isSyncing 
+                    ? `Step ${syncProgressStep || 1}/3...` 
+                    : `Last Synced: ${lastSyncedTime}`}
+                </div>
+              </div>
+
+              {isOffline ? (
+                <button
+                  onClick={() => setIsOffline(false)}
+                  className="bg-amber-400 hover:bg-amber-500 text-stone-950 font-black text-[10px] px-2.5 py-1 rounded-lg transition active:scale-95 shadow"
+                >
+                  Restore Online
+                </button>
+              ) : syncQueue.length > 0 ? (
+                <button
+                  onClick={triggerSync}
+                  disabled={isSyncing}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1 transition active:scale-95 shadow"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span>Sync ({syncQueue.length})</span>
+                </button>
+              ) : (
+                <span className="text-emerald-800 font-bold text-[10px] flex items-center gap-1 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  <span>0ms Latency</span>
+                </span>
+              )}
             </div>
           </div>
 
-          <span className="text-[10px] font-extrabold bg-emerald-400/20 text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-400/30 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Resting Peacefully</span>
-          </span>
-        </div>
-
-        {/* Sync & Connectivity status */}
-        <div className={`p-3 rounded-2xl border text-xs transition ${
-          isOffline 
-            ? 'bg-amber-500/20 border-amber-400/40 text-amber-200' 
-            : isSyncing 
-            ? 'bg-blue-500/20 border-blue-400/40 text-blue-200' 
-            : 'bg-white/10 border-white/10 text-white'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-[10px] text-stone-300">
-                {isOffline ? '⚠️ Patient Offline' : isSyncing ? '⚡ Syncing Offline Pipeline' : 'Last Telemetry Sync'}
+          {/* ⌚ Smart Devices Telemetry Card */}
+          <div className="bg-white rounded-2xl p-3.5 border border-sand-200 shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1 text-[11px] font-black text-blue-900 uppercase">
+                <Watch className="w-3.5 h-3.5 text-blue-600" />
+                <span>Smartband GPS Band v2</span>
               </div>
-              <div className="font-bold text-stone-100">
-                {isOffline 
-                  ? `${syncQueue.length} Updates Cached Locally` 
-                  : isSyncing 
-                  ? `Step ${syncProgressStep || 1}/3...` 
-                  : lastSyncedTime}
+              <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <BatteryCharging className="w-3 h-3 text-amber-600" />
+                <span>88% Battery</span>
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5 pt-1">
+              <div className="bg-sand-50 p-2 rounded-xl border border-sand-200 text-center">
+                <div className="text-[9px] text-stone-500 uppercase font-bold">Heart Rate</div>
+                <div className="text-sm font-black text-stone-900 font-serif flex items-center justify-center gap-1">
+                  <Heart className="w-3 h-3 text-red-500 fill-red-500 animate-pulse" />
+                  <span>{smartbandMetrics.heartRateBpm} bpm</span>
+                </div>
+                <div className="text-[9px] text-emerald-700 font-bold">Normal</div>
+              </div>
+
+              <div className="bg-sand-50 p-2 rounded-xl border border-sand-200 text-center">
+                <div className="text-[9px] text-stone-500 uppercase font-bold">Steps</div>
+                <div className="text-sm font-black text-stone-900 font-serif">{smartbandMetrics.stepsToday}</div>
+                <div className="text-[9px] text-stone-600 font-medium">2.6 km</div>
+              </div>
+
+              <div className="bg-sand-50 p-2 rounded-xl border border-sand-200 text-center">
+                <div className="text-[9px] text-stone-500 uppercase font-bold">Sleep</div>
+                <div className="text-sm font-black text-stone-900 font-serif">{smartbandMetrics.sleepHours}h</div>
+                <div className="text-[9px] text-purple-700 font-bold">2.1h Deep</div>
               </div>
             </div>
 
-            {isOffline ? (
-              <button
-                onClick={() => setIsOffline(false)}
-                className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs px-3 py-1.5 rounded-xl transition active:scale-95 shadow"
-              >
-                Restore Online
-              </button>
-            ) : syncQueue.length > 0 ? (
-              <button
-                onClick={triggerSync}
-                disabled={isSyncing}
-                className="bg-amber-400 hover:bg-amber-500 text-stone-950 font-black text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                <span>Sync ({syncQueue.length})</span>
-              </button>
-            ) : (
-              <span className="text-emerald-300 font-bold text-[11px] flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>0ms Real-Time Sync</span>
+            <div className="flex items-center justify-between text-[10px] text-stone-600 px-1 pt-1 border-t border-sand-200">
+              <span className="flex items-center gap-1 text-emerald-700 font-bold">
+                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                Fall Sensor: Safe
               </span>
+              <span>SpO2: <strong>98%</strong> • Temp: <strong>98.4°F</strong></span>
+            </div>
+          </div>
+
+          {/* 🚨 CRITICAL HIGH PRIORITY RED ALERTS */}
+          {highPriorityAlerts.length > 0 && (
+            <div className="bg-red-50 border-2 border-red-500 rounded-2xl p-3 shadow-md space-y-2 ring-2 ring-red-400/40">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black text-red-950 flex items-center gap-1.5 uppercase">
+                  <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
+                  <span>🚨 Red Alert ({highPriorityAlerts.length})</span>
+                </span>
+                <span className="text-[9px] font-black bg-red-600 text-white px-2 py-0.5 rounded-full">
+                  Action Required
+                </span>
+              </div>
+
+              {highPriorityAlerts.map(alert => (
+                <div key={alert.id} className="bg-white p-2.5 rounded-xl border border-red-300 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-red-950">{alert.title}</span>
+                    <span className="text-[9px] text-stone-500">{alert.timestamp}</span>
+                  </div>
+                  <p className="text-[10px] text-red-900">{alert.description}</p>
+                  <div className="text-[10px] text-stone-800 bg-red-50 p-1.5 rounded-lg border border-red-200 font-medium">
+                    <strong>Priya's Action:</strong> {alert.suggestedAction}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 📈 LONGITUDINAL HEALTH IMPACT MATRIX (Improvements vs Affecting) */}
+          <div className="bg-white rounded-2xl p-3.5 border border-sand-200 shadow-sm space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black text-terracotta-700 uppercase">
+                Asha's Impact Matrix
+              </span>
+              <span className="text-[9px] text-stone-500 font-bold">14-Day Trends</span>
+            </div>
+
+            {/* Improving item */}
+            <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 space-y-1">
+              <div className="flex items-center justify-between text-[11px] font-black text-emerald-950">
+                <span>✅ Morning Recall Accuracy</span>
+                <span className="bg-emerald-200 text-emerald-900 text-[9px] px-1.5 py-0.2 rounded">+14% Growth</span>
+              </div>
+              <p className="text-[10px] text-stone-600">
+                Accuracy rose to 84% when played between 8:30 AM – 9:30 AM with Meera's voice notes.
+              </p>
+            </div>
+
+            {/* Affecting item */}
+            <div className="bg-amber-50/80 p-2.5 rounded-xl border border-amber-200 space-y-1">
+              <div className="flex items-center justify-between text-[11px] font-black text-amber-950">
+                <span>⚠️ 3:00 PM Hydration Dip</span>
+                <span className="bg-amber-200 text-amber-900 text-[9px] px-1.5 py-0.2 rounded">Snoozed 3x</span>
+              </div>
+              <p className="text-[10px] text-stone-600">
+                Asha snoozes afternoon water alarms when resting.
+              </p>
+              <div className="text-[10px] text-amber-950 bg-white p-1.5 rounded-lg border border-amber-200 font-medium">
+                <strong>👉 Priya's Action:</strong> Offer warm lemon water (Kazi Nemu) on the veranda.
+              </div>
+            </div>
+          </div>
+
+          {/* Remote Voice Reminder Sender */}
+          <div className="bg-white rounded-2xl p-3.5 border border-sand-200 shadow-sm space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-terracotta-700 flex items-center gap-1">
+                <Send className="w-3 h-3" />
+                <span>Send Voice Reminder</span>
+              </span>
+              <span className="text-[9px] text-stone-500 bg-sand-100 px-1.5 py-0.5 rounded-full">
+                Speaks on Asha's Phone
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5">
+              {presets.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => handleSendPreset(p)}
+                  className={`p-2 rounded-xl border text-left text-[11px] font-bold transition-all active:scale-95 flex items-center justify-between ${
+                    justSentPreset === p.id
+                      ? 'bg-emerald-100 border-emerald-500 text-emerald-900'
+                      : 'bg-sand-50 hover:bg-sand-100 border-sand-200 text-stone-800'
+                  }`}
+                >
+                  <span className="truncate">{p.label}</span>
+                  {justSentPreset === p.id ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                  ) : (
+                    <Send className="w-3 h-3 text-terracotta-500 shrink-0" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {showCustomInput ? (
+              <form onSubmit={handleSendCustom} className="pt-1 space-y-1.5">
+                <input 
+                  type="text"
+                  value={customText}
+                  onChange={(e) => setCustomText(e.target.value)}
+                  placeholder="Custom voice note for Asha..."
+                  className="w-full px-3 py-1.5 rounded-xl border border-sand-300 text-xs focus:ring-2 focus:ring-terracotta-500 text-stone-900 outline-none"
+                  autoFocus
+                />
+                <div className="flex items-center justify-end gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomInput(false)}
+                    className="px-2.5 py-1 text-[10px] text-stone-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-3 py-1 bg-terracotta-600 text-white rounded-lg text-[10px] font-bold"
+                  >
+                    Send
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                onClick={() => setShowCustomInput(true)}
+                className="w-full py-1.5 bg-stone-100 text-stone-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1"
+              >
+                <span>+ Custom Voice Note</span>
+              </button>
             )}
           </div>
 
-          {isOffline && (
-            <p className="text-[10px] text-amber-200/90 mt-1.5 pt-1.5 border-t border-amber-400/20">
-              Awaiting reconnection. Metrics will auto-update the moment Asha's phone connects.
-            </p>
-          )}
-        </div>
-      </div>
+          {/* Asha vs Asha Baseline Metrics */}
+          <div className="bg-white rounded-2xl p-3.5 border border-sand-200 shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-stone-700">
+                Cognitive Baseline (Asha vs Asha)
+              </span>
+              <span className="text-[9px] text-stone-500">30-Day Curve</span>
+            </div>
 
-      {/* 3. Send Remote Voice Reminder (Game-Changing Feature) */}
-      <div className="bg-white rounded-3xl p-4 border-2 border-sand-200 shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-terracotta-700">
-            <Send className="w-3.5 h-3.5 text-terracotta-600" />
-            <span>Send Remote Voice Reminder</span>
+            <div className="grid grid-cols-2 gap-2">
+              {baselineMetrics.map((m, idx) => (
+                <div key={idx} className="bg-sand-50 p-2 rounded-xl border border-sand-200">
+                  <div className="text-[9px] text-stone-500 uppercase font-bold truncate">{m.name}</div>
+                  <div className="text-base font-black text-stone-900 font-serif">{m.score} {m.unit}</div>
+                  <div className="text-[9px] text-emerald-700 font-bold truncate">{m.trendText}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <span className="text-[10px] font-bold text-stone-500 bg-sand-100 px-2 py-0.5 rounded-full">
-            Speaks Out Loud to Asha
-          </span>
+
         </div>
+      )}
 
-        <p className="text-xs text-stone-600">
-          Tap any preset to broadcast an immediate audio chime & gentle spoken reminder to Asha's phone.
-        </p>
+      {/* ========================================================================= */}
+      {/* PAGE 2: PATIENT INFO, FEEDING TIMETABLE & DATA FEEDING STUDIO             */}
+      {/* ========================================================================= */}
+      {activeMobilePage === 'patient_info' && (
+        <div className="space-y-3.5 animate-in fade-in">
+          
+          {/* Patient Profile Card */}
+          <div className="bg-white rounded-2xl p-3.5 border border-sand-200 shadow-sm space-y-2">
+            <div className="flex items-center justify-between pb-2 border-b border-sand-200">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-terracotta-600 text-white flex items-center justify-center font-serif text-lg font-black">
+                  AD
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-stone-900">{patient.name}</h4>
+                  <p className="text-[10px] text-stone-500">74 yrs • Blood: O+ • Assamese / Bengali</p>
+                </div>
+              </div>
+              <span className="text-[9px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
+                MCI Stage 0.5
+              </span>
+            </div>
 
-        {/* 1-Tap Preset Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {presets.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => handleSendPreset(p)}
-              className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all active:scale-95 flex items-center justify-between ${
-                justSentPreset === p.id
-                  ? 'bg-emerald-100 border-emerald-500 text-emerald-900 ring-2 ring-emerald-400'
-                  : 'bg-sand-50 hover:bg-sand-100 border-sand-200 text-stone-800'
-              }`}
-            >
-              <span className="truncate">{p.label}</span>
-              {justSentPreset === p.id ? (
-                <Check className="w-4 h-4 text-emerald-700 shrink-0" />
-              ) : (
-                <Send className="w-3.5 h-3.5 text-terracotta-500 shrink-0" />
-              )}
-            </button>
-          ))}
-        </div>
+            <div className="text-[10px] text-stone-700 space-y-1">
+              <div><strong>Residence:</strong> House #14, Brahmaputra View Lane, Silpukhuri, Guwahati</div>
+              <div><strong>Hospital:</strong> GMCH Guwahati (3.2 km, Dr. B. Barman)</div>
+              <div><strong>Allergies:</strong> <span className="text-red-700 font-bold">Penicillin</span></div>
+            </div>
+          </div>
 
-        {/* Custom Message Toggle */}
-        {showCustomInput ? (
-          <form onSubmit={handleSendCustom} className="pt-1 space-y-2">
-            <input 
-              type="text"
-              value={customText}
-              onChange={(e) => setCustomText(e.target.value)}
-              placeholder="Type a custom warm voice note for Asha..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-sand-300 text-xs focus:ring-2 focus:ring-terracotta-500 text-stone-900 outline-none"
-              autoFocus
-            />
-            <div className="flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowCustomInput(false)}
-                className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-800"
-              >
-                Cancel
-              </button>
+          {/* 🍽️ Feeding & Nutrition Timetable */}
+          <div className="bg-white rounded-2xl p-3.5 border border-sand-200 shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-amber-900 flex items-center gap-1">
+                <Utensils className="w-3.5 h-3.5 text-amber-700" />
+                <span>Daily Feeding Timetable</span>
+              </span>
+              <span className="text-[9px] text-stone-500 font-bold">2,200 mL Target</span>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="p-2 bg-amber-50/60 rounded-xl border border-amber-200 flex items-center justify-between text-[10px]">
+                <div>
+                  <strong className="text-stone-900">08:00 AM • Breakfast:</strong> Joha Rice Kheer & Boiled Egg
+                </div>
+                <span className="text-[9px] font-bold text-terracotta-700">💊 BP Pill</span>
+              </div>
+
+              <div className="p-2 bg-blue-50/60 rounded-xl border border-blue-200 flex items-center justify-between text-[10px]">
+                <div>
+                  <strong className="text-stone-900">11:00 AM • Hydration:</strong> Warm Assam Lemon (Nemu) Water
+                </div>
+                <span className="text-[9px] font-bold text-blue-700">💧 350 mL</span>
+              </div>
+
+              <div className="p-2 bg-emerald-50/60 rounded-xl border border-emerald-200 flex items-center justify-between text-[10px]">
+                <div>
+                  <strong className="text-stone-900">01:00 PM • Lunch:</strong> Masor Tenga (Fish) & Dhekia Greens
+                </div>
+                <span className="text-[9px] font-bold text-emerald-700">🍚 Joha Rice</span>
+              </div>
+
+              <div className="p-2 bg-orange-50/60 rounded-xl border border-orange-200 flex items-center justify-between text-[10px]">
+                <div>
+                  <strong className="text-stone-900">04:00 PM • Tea:</strong> Assam CTC Tea & Narikol Laru
+                </div>
+                <span className="text-[9px] font-bold text-orange-700">🍵 Veranda</span>
+              </div>
+
+              <div className="p-2 bg-purple-50/60 rounded-xl border border-purple-200 flex items-center justify-between text-[10px]">
+                <div>
+                  <strong className="text-stone-900">08:30 PM • Dinner:</strong> Moong Khichdi with Ghee
+                </div>
+                <span className="text-[9px] font-bold text-purple-700">💊 Bedtime</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 🖼️ Family Memories Gallery & Audio Notes */}
+          <div className="bg-white rounded-2xl p-3.5 border border-sand-200 shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-terracotta-700 flex items-center gap-1">
+                <Users className="w-3.5 h-3.5" />
+                <span>Family Memories & Audio</span>
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {familyMemories.slice(0, 2).map((member) => (
+                <div key={member.id} className="p-2.5 bg-sand-50 rounded-xl border border-sand-200 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <img src={member.photoUrl} alt={member.name} className="w-10 h-10 rounded-lg object-cover" />
+                    <div>
+                      <div className="text-xs font-bold text-stone-900">{member.name}</div>
+                      <div className="text-[9px] text-stone-500">{member.relationship}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => speakText(member.audioNoteText, 'as')}
+                    className="p-2 bg-terracotta-100 text-terracotta-800 rounded-lg text-[10px] font-bold flex items-center gap-1 shrink-0"
+                  >
+                    <Volume2 className="w-3 h-3" />
+                    <span>Play</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ✏️ Interactive Feeding Data Form (Add to Asha's Schedule) */}
+          <div className="bg-sand-100 rounded-2xl p-3.5 border border-sand-300 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black text-stone-900 flex items-center gap-1 uppercase">
+                <Plus className="w-3.5 h-3.5 text-terracotta-600" />
+                <span>Feed New Routine / Meal</span>
+              </span>
+            </div>
+
+            {formSuccessMessage && (
+              <div className="p-2 bg-emerald-100 text-emerald-900 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                <Check className="w-3.5 h-3.5" />
+                <span>{formSuccessMessage}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAddQuickRoutine} className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={newRoutineTime}
+                  onChange={(e) => setNewRoutineTime(e.target.value)}
+                  placeholder="03:30 PM"
+                  className="px-2.5 py-1.5 bg-white rounded-lg border border-sand-300 text-xs font-bold outline-none"
+                />
+                <select
+                  value={newRoutineCategory}
+                  onChange={(e: any) => setNewRoutineCategory(e.target.value)}
+                  className="px-2.5 py-1.5 bg-white rounded-lg border border-sand-300 text-xs font-bold outline-none"
+                >
+                  <option value="hydration">Hydration / Water</option>
+                  <option value="meal">Meal / Food</option>
+                  <option value="medicine">Medicine</option>
+                  <option value="walk">Garden Walk</option>
+                </select>
+              </div>
+
+              <input
+                type="text"
+                value={newRoutineTitle}
+                onChange={(e) => setNewRoutineTitle(e.target.value)}
+                placeholder="e.g. Afternoon Tender Coconut Water"
+                className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-sand-300 text-xs font-bold outline-none"
+              />
+
               <button
                 type="submit"
-                className="px-4 py-1.5 bg-terracotta-600 hover:bg-terracotta-700 text-white rounded-xl text-xs font-bold transition"
+                className="w-full py-2 bg-stone-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1"
               >
-                Send Voice Push
+                <Plus className="w-3.5 h-3.5 text-amber-300" />
+                <span>Sync to Asha's Screen</span>
               </button>
-            </div>
-          </form>
-        ) : (
-          <button
-            onClick={() => setShowCustomInput(true)}
-            className="w-full py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition"
-          >
-            <span>+ Write Custom Voice Reminder</span>
-          </button>
-        )}
-      </div>
+            </form>
+          </div>
 
-      {/* 4. Asha vs Asha 7-Day Baseline Metrics */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between px-1">
-          <h4 className="text-xs font-black uppercase tracking-wider text-stone-700">
-            Asha vs Asha Personal Baseline
-          </h4>
-          <span className="text-[10px] text-stone-500 font-medium">N-of-1 Long-term</span>
         </div>
-
-        <div className="grid grid-cols-2 gap-2.5">
-          {baselineMetrics.map((m, idx) => (
-            <div 
-              key={idx}
-              className="bg-white p-3.5 rounded-2xl border border-sand-200 shadow-sm space-y-1"
-            >
-              <div className="text-[10px] font-bold text-stone-500 uppercase tracking-tight truncate">
-                {m.name}
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-black text-stone-900 font-serif">{m.score}</span>
-                <span className="text-xs font-bold text-stone-500">{m.unit}</span>
-              </div>
-              <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 inline-flex items-center gap-1 truncate">
-                <TrendingUp className="w-3 h-3 shrink-0" />
-                <span className="truncate">{m.trendText}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 5. Recent Care Alerts & Actions */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between px-1">
-          <h4 className="text-xs font-black uppercase tracking-wider text-stone-700">
-            Care Insights & Alerts
-          </h4>
-          <span className="text-[10px] text-terracotta-600 font-bold">
-            {caregiverAlerts.filter(a => !a.dismissed).length} Active
-          </span>
-        </div>
-
-        <div className="space-y-2">
-          {caregiverAlerts.filter(a => !a.dismissed).map((alert) => (
-            <div 
-              key={alert.id}
-              className={`p-3.5 rounded-2xl border ${
-                alert.type === 'attention'
-                  ? 'bg-amber-50/90 border-amber-300'
-                  : 'bg-white border-sand-200 shadow-sm'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-1 mb-1">
-                <span className="text-[10px] font-bold text-stone-500">{alert.timestamp}</span>
-                <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-sand-200 text-stone-800">
-                  {alert.significance}
-                </span>
-              </div>
-              <h5 className="font-bold text-xs text-stone-900 mb-0.5">{alert.title}</h5>
-              <p className="text-[11px] text-stone-600 mb-2">{alert.description}</p>
-              
-              <div className="flex items-center justify-end gap-2 pt-1 border-t border-sand-200">
-                <button
-                  onClick={() => dismissAlert(alert.id)}
-                  className="text-[10px] text-stone-500 hover:text-stone-800"
-                >
-                  Dismiss
-                </button>
-                <button
-                  onClick={() => markAlertAction(alert.id)}
-                  className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition ${
-                    alert.actionTaken ? 'bg-emerald-600 text-white' : 'bg-terracotta-600 text-white'
-                  }`}
-                >
-                  {alert.actionTaken ? '✓ Action Logged' : 'Take Action'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Full Desktop Hub Link */}
       <div className="pt-1">
