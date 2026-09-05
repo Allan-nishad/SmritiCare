@@ -83,28 +83,54 @@ export const DualDeviceExperience: React.FC = () => {
     window.open(`${window.location.origin}${window.location.pathname}#caregiver-phone`, '_blank');
   };
 
+  const [simCategory, setSimCategory] = useState<'all' | 'clinical' | 'safety' | 'onboarding' | 'sync'>('all');
+
+  const simulationOptions = [
+    { id: 'alarm_medicine', category: 'clinical', label: 'Medicine Alarm', icon: '🔔', desc: 'Full screen audio & visual prompt', color: 'border-[#D88965]/40 text-[#D88965] hover:bg-[#D88965]/10' },
+    { id: 'snooze_x3', category: 'clinical', label: 'Snooze 3x Alert', icon: '⏳', desc: 'Missed dose escalation to Priya', color: 'border-[#D88965]/40 text-[#D88965] hover:bg-[#D88965]/10' },
+    { id: 'sos_fallback', category: 'clinical', label: 'SOS Fallback Flow', icon: '🚨', desc: 'Auto rolls Meera -> Rahul', color: 'border-[#C95C5C]/50 text-[#FCECEC] bg-[#C95C5C]/20 hover:bg-[#C95C5C]/30' },
+    { id: 'family_voice_push', category: 'clinical', label: 'Voice Reminder Push', icon: '🗣️', desc: 'Priya pushes calming voice note', color: 'border-[#356859] bg-[#356859] text-white hover:bg-[#2C574A]' },
+
+    { id: 'missing_patient', category: 'safety', label: 'Missing Patient (1.8km)', icon: '📍', desc: 'Geofence breach with live GPS', color: 'border-[#D88965]/50 text-[#EEF4EC] bg-[#D88965]/20 hover:bg-[#D88965]/30' },
+    { id: 'take_me_home', category: 'safety', label: 'Take Me Home Route', icon: '🧭', desc: 'Landmark audio turn-by-turn', color: 'border-[#5E9367]/50 text-[#EAF3EC] bg-[#5E9367]/20 hover:bg-[#5E9367]/30' },
+    { id: 'phone_separation', category: 'safety', label: 'Phone Separation Alert', icon: '📳', desc: 'Patient left phone behind', color: 'border-[#C95C5C]/50 text-[#FCECEC] bg-[#C95C5C]/20 hover:bg-[#C95C5C]/30' },
+
+    { id: 'caregiver_setup_express', category: 'onboarding', label: 'Option 1: 1-Min Express Setup', icon: '⚡', desc: 'Instant 1-minute profile builder', color: 'border-[#A8C3A0]/40 text-[#A8C3A0] hover:bg-[#356859]/30' },
+    { id: 'caregiver_setup_custom', category: 'onboarding', label: 'Option 2: 5-Step Custom Wizard', icon: '🛠️', desc: 'In-depth clinical configuration', color: 'border-[#5E9367]/40 text-[#5E9367] hover:bg-[#5E9367]/20' },
+    { id: 'face_recognition', category: 'onboarding', label: 'Patient Face ID Access', icon: '📷', desc: 'Zero password facial biometric login', color: 'border-[#A8C3A0]/40 text-[#A8C3A0] hover:bg-[#356859]/30' },
+
+    { id: 'smartband_pulse', category: 'sync', label: 'Smartband Pulse (78 bpm)', icon: '📡', desc: 'Live BLE wearable vitals', color: 'border-[#5E9367]/40 text-[#5E9367] hover:bg-[#5E9367]/20' },
+    { id: 'sync_reconcile', category: 'sync', label: '3-Step Offline Sync', icon: '🔄', desc: 'Local IndexedDB auto-reconciliation', color: 'border-[#A8C3A0]/40 text-[#A8C3A0] hover:bg-[#356859]/30' },
+    { id: 'game_adaptive_up', category: 'sync', label: 'Adaptive AI Level Up', icon: '📈', desc: 'Cognitive dynamic difficulty scaling', color: 'border-[#A8C3A0]/40 text-[#A8C3A0] hover:bg-[#356859]/30' },
+    { id: 'lang_assamese', category: 'sync', label: 'Assamese Voice Switch', icon: '🗣️', desc: 'Toggle regional Indian dialect', color: 'border-[#A8C3A0]/40 text-[#A8C3A0] hover:bg-[#356859]/30' }
+  ];
+
+  const filteredOptions = simCategory === 'all' 
+    ? simulationOptions 
+    : simulationOptions.filter(o => o.category === simCategory);
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] py-6 px-4 sm:px-8 bg-gradient-to-b from-[#141210] via-[#1c1917] to-[#141210] text-white flex flex-col items-center select-none">
+    <div className="min-h-[calc(100vh-4rem)] py-6 px-4 sm:px-8 bg-gradient-to-b from-[#182320] via-[#26332F] to-[#182320] text-white flex flex-col items-center select-none">
       
       {/* Top Experience Header */}
-      <div className="w-full max-w-6xl mx-auto mb-4 bg-[#26332F]/90 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-[#A8C3A0]/50 shadow-lg flex flex-wrap items-center justify-between gap-3">
+      <div className="w-full max-w-6xl mx-auto mb-4 bg-[#26332F]/95 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-[#A8C3A0]/40 shadow-lg flex flex-wrap items-center justify-between gap-3">
         
         {/* Title & Live Status */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#356859] to-[#5E9367] text-white flex items-center justify-center font-bold shadow-md">
-            <Smartphone className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-2xl bg-[#356859] text-white flex items-center justify-center font-bold shadow-sm">
+            <Smartphone className="w-5 h-5 text-[#EEF4EC]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-extrabold text-sm sm:text-base text-white font-serif">
                 SmritiCare Dual-Device Presentation
               </h2>
-              <span className="bg-[#356859] text-white border border-[#A8C3A0]/50 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="bg-[#356859] text-[#EEF4EC] border border-[#A8C3A0]/50 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#5E9367] animate-pulse" />
                 <span>Live Sync Active</span>
               </span>
             </div>
-            <p className="text-xs text-[#EEF4EC]/70">
+            <p className="text-xs text-[#EEF4EC]/75 font-medium">
               Asha Devi (Patient Mobile) & Priya (Caregiver Hub) communicating with zero latency.
             </p>
           </div>
@@ -128,7 +154,7 @@ export const DualDeviceExperience: React.FC = () => {
           {/* Popout Windows */}
           <button
             onClick={openPatientTab}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#D88965] border border-[#A8C3A0]/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
+            className="px-3 py-1.5 bg-[#1F2B27] hover:bg-[#356859]/50 text-[#D88965] border border-[#A8C3A0]/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
             title="Open Asha's phone in a separate window"
           >
             <span>👵 Asha Phone</span>
@@ -137,7 +163,7 @@ export const DualDeviceExperience: React.FC = () => {
 
           <button
             onClick={openCaregiverTab}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
+            className="px-3 py-1.5 bg-[#1F2B27] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
             title="Open Priya's hub in a separate window"
           >
             <span>👩‍⚕️ Priya Hub</span>
@@ -150,7 +176,7 @@ export const DualDeviceExperience: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border ${
               showLogsDrawer
                 ? 'bg-[#D88965] text-white border-[#D88965]'
-                : 'bg-[#1A2320] text-[#EEF4EC] border-[#A8C3A0]/40 hover:bg-[#356859]'
+                : 'bg-[#1F2B27] text-[#EEF4EC] border-[#A8C3A0]/30 hover:bg-[#356859]'
             }`}
           >
             <ListFilter className="w-3.5 h-3.5" />
@@ -161,6 +187,7 @@ export const DualDeviceExperience: React.FC = () => {
           <button
             onClick={handleCopyLink}
             className="px-3 py-1.5 bg-[#356859] hover:bg-[#2C574A] text-white border border-[#A8C3A0]/40 rounded-xl text-xs font-bold transition"
+            title="Copy Share Link"
           >
             {copiedLink ? <Check className="w-3.5 h-3.5 text-[#5E9367]" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
@@ -168,159 +195,126 @@ export const DualDeviceExperience: React.FC = () => {
       </div>
 
       {/* Prominent Evaluator Simulation Quick-Bar */}
-      <div className="w-full max-w-6xl mx-auto mb-6 bg-[#26332F]/95 backdrop-blur-md rounded-2xl p-3 border-2 border-[#A8C3A0]/60 shadow-xl space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="w-full max-w-6xl mx-auto mb-6 bg-[#26332F]/95 backdrop-blur-md rounded-2xl p-3.5 border border-[#A8C3A0]/40 shadow-xl space-y-3">
+        
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-[#A8C3A0]/20">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-black uppercase tracking-wider text-[#A8C3A0] flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-lg bg-[#356859] text-white flex items-center justify-center">
               <Zap className="w-3.5 h-3.5 text-[#D88965]" />
-              <span>SIH 26003 Interactive Simulation Center (Click any scenario to test live):</span>
+            </div>
+            <span className="text-xs font-bold tracking-tight text-[#EEF4EC]">
+              Interactive Simulation Scenarios
             </span>
           </div>
 
+          {/* Filter Categories */}
+          <div className="flex items-center gap-1 bg-[#1F2B27] p-1 rounded-xl border border-[#A8C3A0]/30 text-xs">
+            <button
+              onClick={() => setSimCategory('all')}
+              className={`px-2.5 py-1 rounded-lg font-bold transition ${
+                simCategory === 'all' ? 'bg-[#356859] text-white' : 'text-[#EEF4EC]/70 hover:text-white'
+              }`}
+            >
+              All ({simulationOptions.length})
+            </button>
+            <button
+              onClick={() => setSimCategory('clinical')}
+              className={`px-2.5 py-1 rounded-lg font-bold transition ${
+                simCategory === 'clinical' ? 'bg-[#356859] text-white' : 'text-[#EEF4EC]/70 hover:text-white'
+              }`}
+            >
+              🔔 Clinical & Alarms
+            </button>
+            <button
+              onClick={() => setSimCategory('safety')}
+              className={`px-2.5 py-1 rounded-lg font-bold transition ${
+                simCategory === 'safety' ? 'bg-[#356859] text-white' : 'text-[#EEF4EC]/70 hover:text-white'
+              }`}
+            >
+              📍 Safety & Map
+            </button>
+            <button
+              onClick={() => setSimCategory('onboarding')}
+              className={`px-2.5 py-1 rounded-lg font-bold transition ${
+                simCategory === 'onboarding' ? 'bg-[#356859] text-white' : 'text-[#EEF4EC]/70 hover:text-white'
+              }`}
+            >
+              ⚙️ Setup & Face ID
+            </button>
+            <button
+              onClick={() => setSimCategory('sync')}
+              className={`px-2.5 py-1 rounded-lg font-bold transition ${
+                simCategory === 'sync' ? 'bg-[#356859] text-white' : 'text-[#EEF4EC]/70 hover:text-white'
+              }`}
+            >
+              🔄 Sync & Vitals
+            </button>
+          </div>
+
           {activeToast && (
-            <span className="text-xs font-bold text-[#EEF4EC] bg-[#356859] px-2.5 py-0.5 rounded-lg border border-[#A8C3A0]/50 animate-pulse">
+            <span className="text-xs font-bold text-[#EEF4EC] bg-[#356859] px-2.5 py-1 rounded-xl border border-[#A8C3A0]/50 animate-pulse">
               ✓ {activeToast}
             </span>
           )}
         </div>
 
-        {/* Action Trigger Pills */}
-        <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
-          <button
-            onClick={() => handleQuickSim('alarm_medicine', 'Medicine Alarm Overlay')}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#D88965] border border-[#D88965]/40 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            🔔 Medicine Alarm
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('snooze_x3', 'Snooze 3x Escalation Alert')}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#D88965] border border-[#D88965]/40 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            ⏳ Snooze 3x Alert
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('sos_fallback', 'SOS 2-Contact Fallback Flow')}
-            className="px-3 py-1.5 bg-[#C95C5C]/20 hover:bg-[#C95C5C]/40 text-[#FCECEC] border border-[#C95C5C]/60 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            🚨 SOS 2-Contact Fallback
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('missing_patient', 'Missing Patient (1.8km Geofence Alert)')}
-            className="px-3 py-1.5 bg-[#D88965]/20 hover:bg-[#D88965]/40 text-[#EEF4EC] border border-[#D88965]/60 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            📍 Missing Patient (1.8km)
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('take_me_home', 'Take Me Home Navigation')}
-            className="px-3 py-1.5 bg-[#5E9367]/20 hover:bg-[#5E9367]/40 text-[#EAF3EC] border border-[#5E9367]/60 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            🧭 Take Me Home
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('game_adaptive_up', 'Adaptive AI Level Up')}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            📈 Adaptive AI (Level Up)
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('smartband_pulse', 'Smartband Pulse')}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#5E9367] border border-[#5E9367]/40 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            📡 Smartband Pulse
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('sync_reconcile', '3-Step Offline Sync')}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            🔄 3-Step Offline Sync
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('family_voice_push', 'Priya Voice Reminder Push')}
-            className="px-3 py-1.5 bg-[#D88965] hover:bg-[#C4724D] text-white rounded-xl transition active:scale-95 shadow-sm"
-          >
-            🗣️ Push Voice Reminder
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('caregiver_setup_express', 'Option 1: 1-Min Express Setup')}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            ⚡ Setup Option 1 (1-Min Express)
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('caregiver_setup_custom', 'Option 2: 5-Step Custom Wizard')}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#5E9367] border border-[#5E9367]/40 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            🛠️ Setup Option 2 (5-Step Wizard)
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('face_recognition', 'Patient Face ID Access')}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            📷 Patient Face ID
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('phone_separation', 'Smartband Phone Separation Alert')}
-            className="px-3 py-1.5 bg-[#C95C5C]/30 hover:bg-[#C95C5C]/50 text-[#FCECEC] border border-[#C95C5C]/60 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            📳 Phone Separation Alert
-          </button>
-
-          <button
-            onClick={() => handleQuickSim('lang_assamese', 'Assamese Language')}
-            className="px-3 py-1.5 bg-[#1A2320] hover:bg-[#356859]/50 text-[#A8C3A0] border border-[#A8C3A0]/40 rounded-xl transition active:scale-95 shadow-xs"
-          >
-            অসমীয়া Switch
-          </button>
+        {/* Action Trigger Pills Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 text-xs font-bold">
+          {filteredOptions.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => handleQuickSim(opt.id, opt.label)}
+              className={`p-2 bg-[#1F2B27] border rounded-xl transition active:scale-95 shadow-xs text-left flex flex-col justify-between min-h-[58px] ${opt.color}`}
+              title={opt.desc}
+            >
+              <div className="flex items-center gap-1.5 font-bold">
+                <span>{opt.icon}</span>
+                <span className="truncate">{opt.label}</span>
+              </div>
+              <span className="text-[10px] text-[#EEF4EC]/60 font-normal truncate mt-0.5">
+                {opt.desc}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Collapsible Logs Drawer */}
       {showLogsDrawer && (
-        <div className="w-full max-w-6xl mx-auto mb-6 bg-stone-900 rounded-2xl p-4 border border-stone-700 shadow-2xl space-y-2 animate-in slide-in-from-top-2 duration-200">
-          <div className="flex items-center justify-between pb-2 border-b border-stone-800">
-            <span className="text-xs font-black uppercase text-amber-300 tracking-wider">
+        <div className="w-full max-w-6xl mx-auto mb-6 bg-[#26332F] rounded-2xl p-4 border border-[#A8C3A0]/40 shadow-2xl space-y-2 animate-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between pb-2 border-b border-[#A8C3A0]/20">
+            <span className="text-xs font-bold uppercase text-[#A8C3A0] tracking-wider">
               Real-Time Cross-Device Telemetry Logs
             </span>
-            <span className="text-[10px] font-mono text-emerald-400">Zero-Latency Local Broadcast</span>
+            <span className="text-[10px] font-mono text-[#5E9367]">Zero-Latency Local Broadcast</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto no-scrollbar pt-1">
             {telemetryLogs.slice(0, 9).map((log) => (
               <div 
                 key={log.id}
-                className="bg-stone-800/90 p-2.5 rounded-xl border border-stone-700 text-xs space-y-1"
+                className="bg-[#1F2B27] p-2.5 rounded-xl border border-[#A8C3A0]/30 text-xs space-y-1"
               >
-                <div className="flex items-center justify-between text-stone-400">
-                  <span className="font-mono text-[10px] text-amber-400">{log.timestamp}</span>
+                <div className="flex items-center justify-between text-[#EEF4EC]/70">
+                  <span className="font-mono text-[10px] text-[#D88965]">{log.timestamp}</span>
                   <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
                     log.source === 'patient' 
-                      ? 'bg-terracotta-500/20 text-terracotta-300'
+                      ? 'bg-[#D88965]/20 text-[#D88965]'
                       : log.source === 'caregiver'
-                      ? 'bg-sage-500/20 text-sage-300'
-                      : 'bg-stone-700 text-stone-300'
+                      ? 'bg-[#A8C3A0]/20 text-[#A8C3A0]'
+                      : 'bg-[#356859] text-[#EEF4EC]'
                   }`}>
                     {log.source}
                   </span>
                 </div>
-                <div className="font-bold text-stone-100 text-xs truncate">{log.title}</div>
-                <div className="text-[11px] text-stone-400 truncate">{log.detail}</div>
+                <div className="font-bold text-[#EEF4EC] text-xs truncate">{log.title}</div>
+                <div className="text-[11px] text-[#EEF4EC]/60 truncate">{log.detail}</div>
               </div>
             ))}
           </div>
         </div>
       )}
+
 
       {/* Main 2-Phone Stage Display (Left: Asha, Right: Priya) */}
       <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12">
