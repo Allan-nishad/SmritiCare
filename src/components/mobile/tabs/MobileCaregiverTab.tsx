@@ -33,8 +33,9 @@ import {
   Users,
   MapPin,
   Utensils,
-  PhoneCall,
-  Navigation
+  Navigation,
+  Brain,
+  PhoneCall
 } from 'lucide-react';
 
 interface MobileCaregiverTabProps {
@@ -358,36 +359,122 @@ export const MobileCaregiverTab: React.FC<MobileCaregiverTabProps> = ({
             </div>
           )}
 
-          {/* 📈 LONGITUDINAL HEALTH IMPACT MATRIX (Improvements vs Affecting) */}
-          <div className="bg-white rounded-2xl p-3.5 border border-sand-200 shadow-sm space-y-2.5">
+          {/* 🧠 AI COGNITIVE & PERSONALISATION LONGITUDINAL ANALYTICS */}
+          <div className="bg-white rounded-2xl p-3.5 border border-[#A8C3A0]/60 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black text-terracotta-700 uppercase">
+              <div className="flex items-center gap-1.5 text-[11px] font-black text-[#356859] uppercase">
+                <Brain className="w-3.5 h-3.5 text-[#D88965]" />
+                <span>Cognitive & Personalization Health</span>
+              </div>
+              <span className="text-[9px] font-bold text-[#5E9367] bg-[#EEF4EC] px-2 py-0.5 rounded-full border border-[#A8C3A0]/40">
+                14-Day AI Baseline
+              </span>
+            </div>
+
+            {/* 4 Cognitive Domains Grid */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-[#EEF4EC] p-2.5 rounded-xl border border-[#A8C3A0]/40 space-y-1">
+                <div className="flex items-center justify-between text-[10px] font-bold text-[#26332F]">
+                  <span>🦏 Family Memory Recall</span>
+                  <span className="text-[#356859] font-black">88%</span>
+                </div>
+                <div className="w-full bg-[#F8F5ED] h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-[#356859] h-full rounded-full" style={{ width: '88%' }} />
+                </div>
+                <div className="text-[9px] text-[#26332F]/70 flex items-center justify-between">
+                  <span>3s Preview Exposure</span>
+                  <span className="text-[#5E9367] font-bold">Lvl 3</span>
+                </div>
+              </div>
+
+              <div className="bg-[#EEF4EC] p-2.5 rounded-xl border border-[#A8C3A0]/40 space-y-1">
+                <div className="flex items-center justify-between text-[10px] font-bold text-[#26332F]">
+                  <span>🫖 Visual Attention</span>
+                  <span className="text-[#356859] font-black">82%</span>
+                </div>
+                <div className="w-full bg-[#F8F5ED] h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-[#5E9367] h-full rounded-full" style={{ width: '82%' }} />
+                </div>
+                <div className="text-[9px] text-[#26332F]/70 flex items-center justify-between">
+                  <span>Rhythm Sequencing</span>
+                  <span className="text-[#5E9367] font-bold">Lvl 2</span>
+                </div>
+              </div>
+
+              <div className="bg-[#EEF4EC] p-2.5 rounded-xl border border-[#A8C3A0]/40 space-y-1">
+                <div className="flex items-center justify-between text-[10px] font-bold text-[#26332F]">
+                  <span>🧣 Semantic Words</span>
+                  <span className="text-[#356859] font-black">91%</span>
+                </div>
+                <div className="w-full bg-[#F8F5ED] h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-[#356859] h-full rounded-full" style={{ width: '91%' }} />
+                </div>
+                <div className="text-[9px] text-[#26332F]/70 flex items-center justify-between">
+                  <span>Cultural Vernacular</span>
+                  <span className="text-[#5E9367] font-bold">Lvl 3</span>
+                </div>
+              </div>
+
+              <div className="bg-[#EEF4EC] p-2.5 rounded-xl border border-[#A8C3A0]/40 space-y-1">
+                <div className="flex items-center justify-between text-[10px] font-bold text-[#26332F]">
+                  <span>⏰ Routine Recall</span>
+                  <span className="text-[#356859] font-black">79%</span>
+                </div>
+                <div className="w-full bg-[#F8F5ED] h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-[#D88965] h-full rounded-full" style={{ width: '79%' }} />
+                </div>
+                <div className="text-[9px] text-[#26332F]/70 flex items-center justify-between">
+                  <span>Feeding Timetable</span>
+                  <span className="text-[#D88965] font-bold">Lvl 2</span>
+                </div>
+              </div>
+            </div>
+
+            {/* AI Adaptive Performance Decision Insight */}
+            <div className="bg-[#F8F5ED] p-2.5 rounded-xl border border-[#A8C3A0]/40 text-[10.5px] text-[#26332F] space-y-1">
+              <div className="flex items-center justify-between font-bold text-[#356859]">
+                <span className="flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-[#D88965]" />
+                  <span>AI Performance Adaptation Engine</span>
+                </span>
+                <span className="text-[9.5px] text-[#5E9367] font-extrabold">+14% Growth</span>
+              </div>
+              <p className="text-[10px] text-[#26332F]/80">
+                Difficulty dynamically calibrated up from <strong>Level 2 → Level 3</strong> based on consecutive mistake-free recall and faster response speed (4.2s avg).
+              </p>
+            </div>
+          </div>
+
+          {/* 📈 LONGITUDINAL HEALTH IMPACT MATRIX (Improvements vs Affecting) */}
+          <div className="bg-white rounded-2xl p-3.5 border border-[#A8C3A0]/60 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black text-[#356859] uppercase">
                 Asha's Impact Matrix
               </span>
-              <span className="text-[9px] text-stone-500 font-bold">14-Day Trends</span>
+              <span className="text-[9px] text-[#26332F]/60 font-bold">14-Day Trends</span>
             </div>
 
             {/* Improving item */}
-            <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 space-y-1">
-              <div className="flex items-center justify-between text-[11px] font-black text-emerald-950">
+            <div className="bg-[#EEF4EC] p-2.5 rounded-xl border border-[#A8C3A0]/50 space-y-1">
+              <div className="flex items-center justify-between text-[11px] font-black text-[#356859]">
                 <span>✅ Morning Recall Accuracy</span>
-                <span className="bg-emerald-200 text-emerald-900 text-[9px] px-1.5 py-0.2 rounded">+14% Growth</span>
+                <span className="bg-[#5E9367] text-white text-[9px] px-1.5 py-0.2 rounded font-bold">+14% Growth</span>
               </div>
-              <p className="text-[10px] text-stone-600">
+              <p className="text-[10px] text-[#26332F]/80">
                 Accuracy rose to 84% when played between 8:30 AM – 9:30 AM with Meera's voice notes.
               </p>
             </div>
 
             {/* Affecting item */}
-            <div className="bg-amber-50/80 p-2.5 rounded-xl border border-amber-200 space-y-1">
-              <div className="flex items-center justify-between text-[11px] font-black text-amber-950">
-                <span>⚠️ 3:00 PM Hydration Dip</span>
-                <span className="bg-amber-200 text-amber-900 text-[9px] px-1.5 py-0.2 rounded">Snoozed 3x</span>
+            <div className="bg-[#F8F5ED] p-2.5 rounded-xl border border-[#D88965]/40 space-y-1">
+              <div className="flex items-center justify-between text-[11px] font-black text-[#26332F]">
+                <span className="text-[#D88965]">⚠️ 3:00 PM Hydration Dip</span>
+                <span className="bg-[#D88965]/20 text-[#D88965] border border-[#D88965]/50 text-[9px] px-1.5 py-0.2 rounded font-bold">Snoozed 3x</span>
               </div>
-              <p className="text-[10px] text-stone-600">
+              <p className="text-[10px] text-[#26332F]/80">
                 Asha snoozes afternoon water alarms when resting.
               </p>
-              <div className="text-[10px] text-amber-950 bg-white p-1.5 rounded-lg border border-amber-200 font-medium">
+              <div className="text-[10px] text-[#26332F] bg-white p-1.5 rounded-lg border border-[#A8C3A0]/40 font-medium">
                 <strong>👉 Priya's Action:</strong> Offer warm lemon water (Kazi Nemu) on the veranda.
               </div>
             </div>
