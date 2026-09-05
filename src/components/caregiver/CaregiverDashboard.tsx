@@ -39,7 +39,10 @@ export const CaregiverDashboard: React.FC = () => {
     routines, 
     caregiverAlerts, 
     isOffline, 
+    setIsOffline,
     syncQueue, 
+    isSyncing,
+    syncProgressStep,
     triggerSync, 
     lastSyncedTime,
     location,
@@ -121,6 +124,98 @@ export const CaregiverDashboard: React.FC = () => {
           </div>
 
         </div>
+      </div>
+
+      {/* 2. Real-Time Telemetry & Offline / Online Sync Status Banner */}
+      <div className={`rounded-3xl p-5 border-2 shadow-soft transition-all duration-300 ${
+        isOffline 
+          ? 'bg-amber-50 border-amber-300 text-amber-950' 
+          : isSyncing 
+          ? 'bg-blue-50 border-blue-300 text-blue-950' 
+          : 'bg-emerald-50/80 border-emerald-300 text-emerald-950'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
+              isOffline 
+                ? 'bg-amber-200 text-amber-800' 
+                : isSyncing 
+                ? 'bg-blue-200 text-blue-800 animate-spin' 
+                : 'bg-emerald-200 text-emerald-800'
+            }`}>
+              {isOffline ? <WifiOff className="w-5 h-5" /> : isSyncing ? <RefreshCw className="w-5 h-5" /> : <Wifi className="w-5 h-5" />}
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="font-extrabold text-sm sm:text-base">
+                  {isOffline 
+                    ? `⚠️ Patient Device (Asha) is Offline • Awaiting Reconnection`
+                    : isSyncing 
+                    ? `⚡ Synchronizing Offline Data Pipeline (Step 3-of-3)...`
+                    : `🟢 Live Real-Time Sync Active • 0ms Broadcast Latency`}
+                </h4>
+                {isOffline && syncQueue.length > 0 && (
+                  <span className="bg-amber-400 text-stone-950 text-xs font-black px-2 py-0.5 rounded-full">
+                    {syncQueue.length} Pending Updates
+                  </span>
+                )}
+              </div>
+
+              <p className="text-xs sm:text-sm text-stone-600 mt-0.5">
+                {isOffline 
+                  ? `Asha's device is currently disconnected. ${syncQueue.length} completed routines & cognitive activities are safely cached on her device. Once connectivity is restored, this dashboard and her baseline will update automatically.`
+                  : isSyncing
+                  ? `Reconciling cached sqlite entries with caregiver cloud store and recalculating cognitive baseline in real-time...`
+                  : `Caregiver metrics, cognitive scores, medication confirmations, and GPS status update in real time.`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+            {isOffline ? (
+              <button
+                onClick={() => setIsOffline(false)}
+                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black text-xs rounded-xl shadow transition active:scale-95 flex items-center gap-1.5"
+              >
+                <Wifi className="w-4 h-4" />
+                <span>Restore Online & Auto-Sync</span>
+              </button>
+            ) : syncQueue.length > 0 ? (
+              <button
+                onClick={triggerSync}
+                disabled={isSyncing}
+                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow transition active:scale-95 flex items-center gap-1.5"
+              >
+                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>Sync Pending ({syncQueue.length})</span>
+              </button>
+            ) : (
+              <div className="text-right">
+                <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
+                  Last Sync: {lastSyncedTime}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3-Step Live Sync Visual Progress Bar */}
+        {isSyncing && (
+          <div className="mt-4 pt-3 border-t border-blue-200 space-y-2 animate-in fade-in">
+            <div className="grid grid-cols-3 gap-2 text-[11px] font-bold text-blue-900 text-center">
+              <div className="p-1.5 rounded-lg bg-blue-200 text-blue-950 font-extrabold">
+                1. Packaging Local SQLite DB
+              </div>
+              <div className="p-1.5 rounded-lg bg-blue-200 text-blue-950 font-extrabold">
+                2. Streaming to Caregiver Hub
+              </div>
+              <div className="p-1.5 rounded-lg bg-blue-200 text-blue-950 font-extrabold">
+                3. Recalculating Baseline Live
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Navigation Sub-Tabs */}

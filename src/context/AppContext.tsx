@@ -86,6 +86,7 @@ interface AppContextType {
   setIsOffline: (offline: boolean) => void;
   syncQueue: SyncQueueItem[];
   isSyncing: boolean;
+  syncProgressStep: number;
   lastSyncedTime: string;
   triggerSync: () => Promise<void>;
   
@@ -659,7 +660,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [];
   });
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [syncProgressStep, setSyncProgressStep] = useState<number>(0);
   const [lastSyncedTime, setLastSyncedTime] = useState<string>('Just now');
+
+  const handleSetIsOffline = (offline: boolean) => {
+    setIsOffline(offline);
+    if (!offline && syncQueue.length > 0) {
+      setTimeout(() => {
+        triggerSync();
+      }, 350);
+    }
+  };
 
   // Tour state
   const [demoTourStep, setDemoTourStep] = useState<number>(0);
@@ -1097,27 +1108,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const triggerSync = async () => {
     if (isSyncing || syncQueue.length === 0) return;
     setIsSyncing(true);
+    setSyncProgressStep(1);
 
-    await new Promise(resolve => setTimeout(resolve, 800)); // Step 1: Encrypt & Package
-    await new Promise(resolve => setTimeout(resolve, 900)); // Step 2: Push to Caregiver Store
-    await new Promise(resolve => setTimeout(resolve, 500)); // Step 3: Recalculate baseline
+    await new Promise(resolve => setTimeout(resolve, 700)); // Step 1: Encrypt & Package local DB
+    setSyncProgressStep(2);
+    await new Promise(resolve => setTimeout(resolve, 800)); // Step 2: Push to Caregiver Store
+    setSyncProgressStep(3);
+    await new Promise(resolve => setTimeout(resolve, 600)); // Step 3: Recalculate baseline in real-time
 
+    const count = syncQueue.length;
     const syncAlert: CaregiverAlert = {
       id: 'sync-alert-' + Date.now(),
       timestamp: 'Just now',
       type: 'insight',
-      title: 'Offline Activities Synchronized',
-      description: `Successfully synchronized ${syncQueue.length} pending activity and routine updates from Asha's offline session.`,
-      whatChanged: 'Caregiver dashboard and personal baseline updated to latest timestamps.',
+      title: '⚡ Offline Activities Reconciled & Baseline Updated',
+      description: `Successfully synchronized ${count} pending cognitive and routine activities from Asha's device. Caregiver dashboard is now 100% live.`,
+      whatChanged: 'Caregiver dashboard, adherence metrics, and personal baseline updated to latest timestamps.',
       significance: 'Low',
-      suggestedAction: 'View updated cognitive session graph below.',
+      suggestedAction: 'View real-time updated cognitive baseline metrics below.',
       dismissed: false
     };
 
     setCaregiverAlerts(prev => [syncAlert, ...prev]);
     setSyncQueue([]);
     setLastSyncedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    setSyncProgressStep(0);
     setIsSyncing(false);
+    sounds.playSuccess();
   };
 
   // Compute Personal Baseline (Asha vs Asha)
@@ -1417,9 +1434,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         profileCompletionItems,
         profileCompletionPercentage,
         isOffline,
-        setIsOffline,
+        setIsOffline: handleSetIsOffline,
         syncQueue,
         isSyncing,
+        syncProgressStep,
         lastSyncedTime,
         triggerSync,
         isVoiceOpen,

@@ -29,7 +29,10 @@ export const MobileCaregiverTab: React.FC = () => {
     caregiverAlerts, 
     dismissAlert, 
     markAlertAction, 
+    isOffline,
+    setIsOffline,
     isSyncing, 
+    syncProgressStep,
     lastSyncedTime, 
     syncQueue, 
     triggerSync, 
@@ -100,7 +103,7 @@ export const MobileCaregiverTab: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 pb-4 animate-in fade-in duration-300">
+    <div className="space-y-4 text-stone-900 select-none animate-in fade-in pb-4">
       
       {/* 1. Real-time Asha Acknowledged Toast Alert */}
       {latestPushAcknowledgement && (
@@ -115,8 +118,8 @@ export const MobileCaregiverTab: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Caregiver Header & Peace of Mind Status */}
-      <div className="bg-gradient-to-br from-[#203a2f] via-[#1a3027] to-[#12231c] text-white rounded-3xl p-4 sm:p-5 shadow-md space-y-3">
+      {/* 2. Caregiver Header & Live Status */}
+      <div className="bg-gradient-to-br from-sage-800 to-stone-900 text-white rounded-3xl p-4 shadow-md space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-sage-500/30 border border-sage-400/40 text-sage-300 flex items-center justify-center">
@@ -135,26 +138,55 @@ export const MobileCaregiverTab: React.FC = () => {
         </div>
 
         {/* Sync & Connectivity status */}
-        <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/10 flex items-center justify-between text-xs">
-          <div>
-            <div className="text-[10px] text-stone-300">Last Telemetry Sync</div>
-            <div className="font-bold text-stone-100">{lastSyncedTime}</div>
+        <div className={`p-3 rounded-2xl border text-xs transition ${
+          isOffline 
+            ? 'bg-amber-500/20 border-amber-400/40 text-amber-200' 
+            : isSyncing 
+            ? 'bg-blue-500/20 border-blue-400/40 text-blue-200' 
+            : 'bg-white/10 border-white/10 text-white'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[10px] text-stone-300">
+                {isOffline ? '⚠️ Patient Offline' : isSyncing ? '⚡ Syncing Offline Pipeline' : 'Last Telemetry Sync'}
+              </div>
+              <div className="font-bold text-stone-100">
+                {isOffline 
+                  ? `${syncQueue.length} Updates Cached Locally` 
+                  : isSyncing 
+                  ? `Step ${syncProgressStep || 1}/3...` 
+                  : lastSyncedTime}
+              </div>
+            </div>
+
+            {isOffline ? (
+              <button
+                onClick={() => setIsOffline(false)}
+                className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs px-3 py-1.5 rounded-xl transition active:scale-95 shadow"
+              >
+                Restore Online
+              </button>
+            ) : syncQueue.length > 0 ? (
+              <button
+                onClick={triggerSync}
+                disabled={isSyncing}
+                className="bg-amber-400 hover:bg-amber-500 text-stone-950 font-black text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>Sync ({syncQueue.length})</span>
+              </button>
+            ) : (
+              <span className="text-emerald-300 font-bold text-[11px] flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>0ms Real-Time Sync</span>
+              </span>
+            )}
           </div>
 
-          {syncQueue.length > 0 ? (
-            <button
-              onClick={triggerSync}
-              disabled={isSyncing}
-              className="bg-amber-400 hover:bg-amber-500 text-stone-950 font-black text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>Sync ({syncQueue.length})</span>
-            </button>
-          ) : (
-            <span className="text-emerald-300 font-bold text-[11px] flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>0ms Real-Time Sync</span>
-            </span>
+          {isOffline && (
+            <p className="text-[10px] text-amber-200/90 mt-1.5 pt-1.5 border-t border-amber-400/20">
+              Awaiting reconnection. Metrics will auto-update the moment Asha's phone connects.
+            </p>
           )}
         </div>
       </div>
