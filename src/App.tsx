@@ -12,12 +12,16 @@ import { MusicPlayerWidget } from './components/patient/MusicPlayerWidget';
 import { SimulationCenter } from './components/shared/SimulationCenter';
 import { EmergencySosOverlay } from './components/patient/EmergencySosOverlay';
 import { IncomingPushOverlay } from './components/patient/IncomingPushOverlay';
+import { LiveSimulationBanner } from './components/shared/LiveSimulationBanner';
 
 const AppContent: React.FC = () => {
   const { role } = useApp();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF7F2] text-[#2C241E] selection:bg-terracotta-200">
+      {/* Real-time Global Simulation Notification Banner */}
+      <LiveSimulationBanner />
+
       {/* Persistent Navigation Bar */}
       <Navbar />
 

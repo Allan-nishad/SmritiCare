@@ -127,6 +127,8 @@ interface AppContextType {
   triggerSimulationEvent: (eventType: 'morning_med' | 'memory_game' | 'sos_help' | 'hydration') => void;
 
   // Evaluator Simulation Center Triggers (Specification 39)
+  activeSimulation: { scenario: string; title: string; subtitle: string; timestamp: string; stepDetails: string[] } | null;
+  setActiveSimulation: (sim: { scenario: string; title: string; subtitle: string; timestamp: string; stepDetails: string[] } | null) => void;
   triggerSimulation: (scenario: 
     | 'alarm_medicine' 
     | 'snooze_x3' 
@@ -684,6 +686,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [mobileTab, setMobileTab] = useState<MobileTab>('home');
   const [deviceFrame, setDeviceFrame] = useState<DeviceFrameStyle>('iphone');
   const [mobileSubRole, setMobileSubRole] = useState<'patient' | 'caregiver'>('patient');
+  const [activeSimulation, setActiveSimulation] = useState<{ scenario: string; title: string; subtitle: string; timestamp: string; stepDetails: string[] } | null>(null);
 
   // Telemetry Logs for Real-time inspection
   const [telemetryLogs, setTelemetryLogs] = useState<TelemetryLogItem[]>([
@@ -1259,13 +1262,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     | 'lang_assamese' 
     | 'family_voice_push'
   ) => {
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
     switch (scenario) {
       case 'alarm_medicine':
+        setActiveSimulation({
+          scenario: 'alarm_medicine',
+          title: '🔔 Android-Like Medication Alarm Triggered (SIH 26003.8 & 9)',
+          subtitle: 'Prominent screen-interrupting alarm overlay with audio chime & spoken voice dosage for Telmisartan (40mg).',
+          timestamp: nowTime,
+          stepDetails: ['Screen Overlay Interrupted', 'Audio Chime & Speech Triggered', 'Awaiting Patient Done / Snooze']
+        });
         setActivePatientTab('routine');
         triggerAlarm('r1');
         break;
 
       case 'snooze_x3':
+        setActiveSimulation({
+          scenario: 'snooze_x3',
+          title: '⏳ 3x Repeated Snooze Escalation (SIH 26003.10)',
+          subtitle: 'Asha snoozed her morning medication 3 consecutive times past schedule. System auto-escalated into a High-Priority Caregiver Alert on Priya\'s dashboard.',
+          timestamp: nowTime,
+          stepDetails: ['Snooze 1 (10 mins)', 'Snooze 2 (20 mins)', 'Snooze 3 ➔ Caregiver Alert Dispatched']
+        });
         setActivePatientTab('routine');
         snoozeRoutine('r1');
         setTimeout(() => snoozeRoutine('r1'), 200);
@@ -1273,6 +1292,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         break;
 
       case 'sos_fallback':
+        setActiveSimulation({
+          scenario: 'sos_fallback',
+          title: '🚨 Emergency SOS 2-Contact Fallback (SIH 26003.15 & 16)',
+          subtitle: 'Emergency call initiated to Meera Devi (Daughter). No answer ➔ Zero-latency fallback to Rahul Sharma (Son) ➔ Connected with live timer and GPS SMS broadcast.',
+          timestamp: nowTime,
+          stepDetails: ['Calling Meera Devi', 'Fallback to Rahul Sharma', 'Connected & GPS SMS Broadcasted']
+        });
         setActivePatientTab('safety');
         setActiveSafetyTab('sos');
         startSosFlow();
@@ -1293,6 +1319,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActivePatientTab('safety');
         setActiveSafetyTab('take_me_home');
         
+        setActiveSimulation({
+          scenario: 'missing_patient',
+          title: '📍 Geofence Breach & Missing Patient (SIH 26003.17 & 18)',
+          subtitle: 'Patient stepped 1.8 km outside safe home boundary near G.S. Road. Caregiver received critical Geofence Alert with live map, while Asha\'s phone activated "Take Me Home" navigation.',
+          timestamp: nowTime,
+          stepDetails: ['1.8km Geofence Departure', 'Caregiver Alert Dispatched', 'Take Me Home Route Activated']
+        });
+
         const locAlert: CaregiverAlert = {
           id: 'geofence-alert-' + Date.now(),
           timestamp: 'Just now',
@@ -1315,28 +1349,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         break;
 
       case 'take_me_home':
+        setActiveSimulation({
+          scenario: 'take_me_home',
+          title: '🧭 Turn-by-Turn Landmark Navigation (SIH 26003.18)',
+          subtitle: 'Asha\'s phone opened simple landmark-based navigation ("Your green gate is on the left") with spoken audio read-out.',
+          timestamp: nowTime,
+          stepDetails: ['Acquiring GPS Position', 'Rendering Landmark Route', 'Speaking Step Guidance']
+        });
         setActivePatientTab('safety');
         setActiveSafetyTab('take_me_home');
         speakText("Asha, follow the simple steps on your screen to walk back home safely.", language);
         break;
 
       case 'offline_toggle':
-        setIsOffline(!isOffline);
+        const nextOffline = !isOffline;
+        setIsOffline(nextOffline);
+        setActiveSimulation({
+          scenario: 'offline_toggle',
+          title: nextOffline ? '⚠️ Offline-First Mode Active (SIH 26003.31)' : '🟢 Network Restored (Online Mode Active)',
+          subtitle: nextOffline 
+            ? 'All cognitive games, routines, and interactions are now securely cached in local SQLite database with zero downtime.'
+            : 'Reconnected to cloud network. Automatic 3-step synchronization will reconcile all pending local updates.',
+          timestamp: nowTime,
+          stepDetails: nextOffline 
+            ? ['Network Disconnected', 'Local SQLite DB Cache Active', 'Zero Latency Response']
+            : ['Network Restored', 'Auto-Sync Triggered', 'Reconciling Live Data']
+        });
         addTelemetryLog({
           source: 'ai_engine',
-          title: !isOffline ? 'Network Disconnected (Offline Mode)' : 'Network Reconnected',
-          detail: !isOffline ? 'Local storage caching active. Zero downtime.' : 'Ready to synchronize pending items.',
+          title: nextOffline ? 'Network Disconnected (Offline Mode)' : 'Network Reconnected',
+          detail: nextOffline ? 'Local storage caching active. Zero downtime.' : 'Ready to synchronize pending items.',
           type: 'sync'
         });
         break;
 
       case 'sync_reconcile':
+        setActiveSimulation({
+          scenario: 'sync_reconcile',
+          title: '🔄 3-Step Offline Batch Synchronization (SIH 26003.32)',
+          subtitle: 'Packaging local encrypted SQLite database, pushing payload to caregiver store, and recalculating personal baseline in real-time.',
+          timestamp: nowTime,
+          stepDetails: ['1. Packaging Local SQLite', '2. Streaming to Caregiver Hub', '3. Recalculating Baseline Live']
+        });
         triggerSync();
         break;
 
       case 'game_adaptive_up':
         setActivePatientTab('games');
         setActiveGameTab('memory_match');
+        setActiveSimulation({
+          scenario: 'game_adaptive_up',
+          title: '📈 Adaptive AI Cognitive Calibration (SIH 26003.5)',
+          subtitle: 'Asha achieved 92% recall accuracy with rapid 7.8s pace. Explainable rule engine automatically promoted difficulty from Level 3 to Level 4 (12 cards) and recalculated baseline.',
+          timestamp: nowTime,
+          stepDetails: ['92% Recall Accuracy Logged', 'Explainable Decision Applied', 'Elevated to Level 4 Deck']
+        });
         recordCognitiveSession({
           gameType: 'memory_match',
           gameTitle: 'Familiar Memory Match',
@@ -1357,6 +1424,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         break;
 
       case 'smartband_pulse':
+        setActiveSimulation({
+          scenario: 'smartband_pulse',
+          title: '📡 Wearable Smartband Telemetry Stream (SIH 26003.19)',
+          subtitle: 'Real-time biometric data packet received: Step count +350, Heart rate 76 bpm (Resting/Walking state).',
+          timestamp: nowTime,
+          stepDetails: ['Pairing BLE Smartband', 'Streaming HR & Steps', 'Updating Caregiver Hub Live']
+        });
         setSmartbandMetrics(prev => ({
           ...prev,
           stepsToday: prev.stepsToday + 350,
@@ -1373,11 +1447,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         break;
 
       case 'lang_assamese':
+        setActiveSimulation({
+          scenario: 'lang_assamese',
+          title: '🗣️ Assamese Regional Localization (SIH 26003.3)',
+          subtitle: 'System localized into Assamese (অসমীয়া) with native typography and speech synthesis for illiterate elderly users.',
+          timestamp: nowTime,
+          stepDetails: ['Switching Language to Assamese', 'Rendering Native Script', 'Speaking Welcome Greeting']
+        });
         setLanguage('as');
         speakText("শুভ প্ৰভাত আশা দেৱী। স্মৃতিকোৱাৰ আপোনাৰ লগত আছে।", 'as');
         break;
 
       case 'family_voice_push':
+        setActiveSimulation({
+          scenario: 'family_voice_push',
+          title: '🗣️ Caregiver Remote Voice Push (SIH 26003.20)',
+          subtitle: 'Priya sent an audio reminder from her hub. Asha\'s phone popped up with Priya\'s photo, audio playback, and a one-tap confirmation button.',
+          timestamp: nowTime,
+          stepDetails: ['Composing Voice Note', 'Broadcasting to Asha', 'Waiting for Acknowledgment']
+        });
         sendPushReminder({
           text: "Ma, please drink a warm cup of water and take your medicine. Priya is with you.",
           category: 'hydration',
@@ -1465,6 +1553,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setDemoTourStep,
         isDemoTourActive,
         setIsDemoTourActive,
+        activeSimulation,
+        setActiveSimulation,
         triggerSimulationEvent: (ev) => {
           if (ev === 'morning_med') triggerSimulation('alarm_medicine');
           else if (ev === 'memory_game') triggerSimulation('game_adaptive_up');
