@@ -6,6 +6,7 @@ import { MobileMemoriesTab } from './tabs/MobileMemoriesTab';
 import { MobileRoutineTab } from './tabs/MobileRoutineTab';
 import { MobileCaregiverTab } from './tabs/MobileCaregiverTab';
 import { LanguageSelector } from '../shared/LanguageSelector';
+import { translations } from '../../utils/translations';
 import { 
   Smartphone, 
   Wifi, 
@@ -47,6 +48,7 @@ export const MobileAppExperience: React.FC = () => {
     language
   } = useApp();
 
+  const t = translations[language] || translations.en;
   const [copiedLink, setCopiedLink] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
 
@@ -284,7 +286,7 @@ export const MobileAppExperience: React.FC = () => {
                   }`}
                 >
                   <Home className={`w-5 h-5 ${mobileTab === 'home' ? 'stroke-[2.5]' : ''}`} />
-                  <span className="text-[10px]">Home</span>
+                  <span className="text-[10px] truncate max-w-[55px]">{t.tabHome}</span>
                 </button>
 
                 <button
@@ -296,7 +298,7 @@ export const MobileAppExperience: React.FC = () => {
                   }`}
                 >
                   <Brain className={`w-5 h-5 ${mobileTab === 'games' ? 'stroke-[2.5]' : ''}`} />
-                  <span className="text-[10px]">Games</span>
+                  <span className="text-[10px] truncate max-w-[55px]">{t.tabGames}</span>
                 </button>
 
                 <button
@@ -308,7 +310,7 @@ export const MobileAppExperience: React.FC = () => {
                   }`}
                 >
                   <Heart className={`w-5 h-5 ${mobileTab === 'memories' ? 'stroke-[2.5]' : ''}`} />
-                  <span className="text-[10px]">Memories</span>
+                  <span className="text-[10px] truncate max-w-[55px]">{t.tabMemories}</span>
                 </button>
 
                 <button
@@ -320,7 +322,7 @@ export const MobileAppExperience: React.FC = () => {
                   }`}
                 >
                   <Calendar className={`w-5 h-5 ${mobileTab === 'routine' ? 'stroke-[2.5]' : ''}`} />
-                  <span className="text-[10px]">Routine</span>
+                  <span className="text-[10px] truncate max-w-[55px]">{t.tabRoutine}</span>
                 </button>
 
                 <button
@@ -335,7 +337,7 @@ export const MobileAppExperience: React.FC = () => {
                   }`}
                 >
                   <Activity className={`w-5 h-5 ${mobileTab === 'caregiver' ? 'stroke-[2.5]' : ''}`} />
-                  <span className="text-[10px]">Priya's Hub</span>
+                  <span className="text-[10px] truncate max-w-[55px]">{t.tabCaregiver}</span>
                 </button>
 
               </div>

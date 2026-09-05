@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { translations } from '../../utils/translations';
+import { translations, getLocalizedRoutine, getLocalizedDayName } from '../../utils/translations';
 import { speakText, sounds } from '../../utils/audio';
 import { MemoryMatchGame } from './games/MemoryMatchGame';
 import { PatternSequenceGame } from './games/PatternSequenceGame';
@@ -53,7 +53,8 @@ export const PatientHome: React.FC = () => {
   const [selectedMainSection, setSelectedMainSection] = useState<'home' | 'games' | 'memories' | 'safety'>('home');
 
   const t = translations[language] || translations.en;
-  const nextRoutine = routines.find(r => !r.completed) || routines[0];
+  const rawRoutine = routines.find(r => !r.completed) || routines[0];
+  const nextRoutine = rawRoutine ? getLocalizedRoutine(rawRoutine, language) : null;
 
   // Live Clock & Date for Orientation Support (Specification 22)
   useEffect(() => {
@@ -61,8 +62,10 @@ export const PatientHome: React.FC = () => {
       const now = new Date();
       setCurrentTimeStr(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       
-      const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-      setCurrentDateStr(now.toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'bn' ? 'bn-IN' : 'en-IN', options));
+      const dayName = getLocalizedDayName(now, language);
+      const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+      const datePart = now.toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'bn' ? 'bn-IN' : language === 'as' ? 'bn-IN' : 'en-IN', options);
+      setCurrentDateStr(`${dayName}, ${datePart}`);
     };
 
     updateDateTime();
@@ -70,10 +73,14 @@ export const PatientHome: React.FC = () => {
     return () => clearInterval(timer);
   }, [language]);
 
+  const handleReadOrientation = () => {
+    const textToRead = `${t.greetingMorning}. ${t.todayLabel} ${currentDateStr}. ${t.locationLabel}.`;
+    speakText(textToRead, language);
+  };
+
   const handleReadRoutine = () => {
     if (!nextRoutine) return;
-    const textToRead = `${nextRoutine.title}. ${nextRoutine.subtitle}`;
-    speakText(textToRead, language);
+    speakText(nextRoutine.spokenText, language);
   };
 
   return (
@@ -84,7 +91,7 @@ export const PatientHome: React.FC = () => {
         <div className="bg-amber-400 text-stone-950 p-6 rounded-[2.5rem] shadow-xl border-4 border-amber-300 animate-in zoom-in-95 duration-200 space-y-4">
           <div className="flex items-center gap-2.5 text-sm font-black uppercase tracking-wider text-amber-950">
             <Bell className="w-6 h-6 text-stone-950 animate-bounce" />
-            <span className="text-base">Spoken Voice Reminder from {activePushReminder.senderName}</span>
+            <span className="text-base">{activePushReminder.senderName}</span>
           </div>
 
           <div className="bg-white rounded-3xl p-6 shadow-sm space-y-4">
@@ -98,7 +105,7 @@ export const PatientHome: React.FC = () => {
                 className="py-4 px-6 bg-sand-100 hover:bg-sand-200 text-stone-900 rounded-2xl text-base font-bold flex items-center gap-2 active:scale-95"
               >
                 <Volume2 className="w-6 h-6 text-terracotta-600" />
-                <span>Listen Again</span>
+                <span>{t.listenAloudLabel}</span>
               </button>
 
               <button
@@ -106,7 +113,7 @@ export const PatientHome: React.FC = () => {
                 className="py-4 px-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-lg font-black flex items-center gap-3 shadow-lg active:scale-95 flex-1 justify-center"
               >
                 <Check className="w-7 h-7 stroke-[3]" />
-                <span>✓ I Took It / Done</span>
+                <span>{t.alarmDoneBtn}</span>
               </button>
             </div>
           </div>
@@ -120,7 +127,7 @@ export const PatientHome: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold text-white border border-white/20">
               <Calendar className="w-4 h-4 text-amber-300" />
-              <span>{currentDateStr || 'Today'}</span>
+              <span>{currentDateStr || t.todayLabel}</span>
             </div>
 
             <div className="inline-flex items-center gap-2 bg-stone-950/40 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-mono font-bold text-amber-300 border border-white/10">
@@ -129,18 +136,29 @@ export const PatientHome: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <span className="text-xs sm:text-sm uppercase tracking-widest font-black text-amber-200 block">
-              {t.greetingMorning}
-            </span>
-            <h1 className="text-3xl sm:text-5xl font-black font-serif tracking-tight leading-tight mt-1">
-              Asha Devi
-            </h1>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs sm:text-sm uppercase tracking-widest font-black text-amber-200 block">
+                {t.greetingMorning}
+              </span>
+              <h1 className="text-3xl sm:text-5xl font-black font-serif tracking-tight leading-tight mt-1">
+                Asha Devi
+              </h1>
+            </div>
+
+            <button
+              onClick={handleReadOrientation}
+              className="p-3 sm:p-4 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-2xl font-bold flex items-center gap-2 border border-white/30 transition active:scale-95"
+              title={t.listenGreeting}
+            >
+              <Volume2 className="w-6 h-6 sm:w-7 sm:h-7 text-amber-300" />
+              <span className="text-xs sm:text-sm hidden sm:inline">{t.listenAloudLabel}</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-2.5 text-sm sm:text-base text-terracotta-100 font-medium">
             <MapPin className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0" />
-            <span>{location.address}</span>
+            <span>{t.locationLabel}</span>
           </div>
 
           {/* Quick Action Navigation Bar */}
@@ -178,7 +196,7 @@ export const PatientHome: React.FC = () => {
       </div>
 
       {/* 3. Next Up Routine Tile (Large touch targets & Voice instruction) */}
-      {nextRoutine && (
+      {rawRoutine && nextRoutine && (
         <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border-2 border-sand-200 shadow-soft space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-wider text-terracotta-700">
@@ -186,7 +204,7 @@ export const PatientHome: React.FC = () => {
               <span>{t.nextUpLabel}</span>
             </div>
             <span className="text-xs sm:text-sm font-black text-amber-900 bg-amber-100 px-4 py-1.5 rounded-full border border-amber-200">
-              {nextRoutine.time}
+              {rawRoutine.time}
             </span>
           </div>
 
@@ -202,22 +220,23 @@ export const PatientHome: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={handleReadRoutine}
-              className="p-4 bg-sand-100 hover:bg-sand-200 text-stone-800 rounded-2xl font-bold flex items-center justify-center transition active:scale-95"
-              title="Read instructions out loud"
+              className="py-4 px-6 bg-sand-100 hover:bg-sand-200 text-stone-800 rounded-2xl font-bold flex items-center justify-center gap-2 transition active:scale-95"
+              title={t.listenAloudLabel}
             >
               <Volume2 className="w-7 h-7 text-terracotta-600" />
+              <span className="text-sm font-bold">{t.listenAloudLabel}</span>
             </button>
 
             <button
-              onClick={() => toggleRoutine(nextRoutine.id)}
+              onClick={() => toggleRoutine(rawRoutine.id)}
               className={`flex-1 py-5 px-6 rounded-2xl font-black text-lg sm:text-xl flex items-center justify-center gap-3 shadow-lg transition active:scale-95 ${
-                nextRoutine.completed
+                rawRoutine.completed
                   ? 'bg-emerald-600 text-white'
                   : 'bg-gradient-to-r from-terracotta-500 to-terracotta-600 hover:from-terracotta-600 text-white'
               }`}
             >
               <CheckCircle2 className="w-7 h-7 stroke-[2.5]" />
-              <span>{nextRoutine.completed ? '✓ Completed Peacefully' : '✓ Mark as Completed'}</span>
+              <span>{rawRoutine.completed ? t.completedPeacefully : t.markAsCompleted}</span>
             </button>
           </div>
         </div>
@@ -228,10 +247,10 @@ export const PatientHome: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-stone-900 font-serif">
-              Cognitive Activities
+              {t.tabGames}
             </h2>
             <p className="text-xs sm:text-sm text-stone-600 font-medium">
-              Gentle memory games personalized with family photos and familiar NER memories.
+              {t.gameInstructionsMemory}
             </p>
           </div>
 
@@ -243,7 +262,7 @@ export const PatientHome: React.FC = () => {
                 activeGameTab === 'memory_match' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
               }`}
             >
-              Memory Match
+              {t.gameMemoryTitle}
             </button>
             <button
               onClick={() => setActiveGameTab('pattern_sequence')}
@@ -251,7 +270,7 @@ export const PatientHome: React.FC = () => {
                 activeGameTab === 'pattern_sequence' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
               }`}
             >
-              Rhythm Pattern
+              {t.gamePatternTitle}
             </button>
             <button
               onClick={() => setActiveGameTab('word_association')}
@@ -259,7 +278,7 @@ export const PatientHome: React.FC = () => {
                 activeGameTab === 'word_association' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
               }`}
             >
-              Object Match
+              {t.gameAssociationTitle}
             </button>
             <button
               onClick={() => setActiveGameTab('shape_match')}
@@ -267,7 +286,7 @@ export const PatientHome: React.FC = () => {
                 activeGameTab === 'shape_match' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
               }`}
             >
-              Shapes
+              {t.gameShapeTitle}
             </button>
             <button
               onClick={() => setActiveGameTab('mini_sudoku')}
@@ -275,7 +294,7 @@ export const PatientHome: React.FC = () => {
                 activeGameTab === 'mini_sudoku' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
               }`}
             >
-              Number Grid
+              {t.gameSudokuTitle}
             </button>
           </div>
         </div>

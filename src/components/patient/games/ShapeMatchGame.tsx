@@ -12,22 +12,31 @@ import {
   Sparkles, 
   RotateCcw, 
   CheckCircle2, 
-  Award 
+  Award,
+  Volume2
 } from 'lucide-react';
 
 interface ShapeItem {
   id: string;
-  name: string;
+  nameKey: 'star' | 'heart' | 'circle' | 'triangle';
   icon: string;
   colorClass: string;
   bgClass: string;
 }
 
+const localizedShapeNames: Record<string, Record<string, string>> = {
+  en: { star: 'Golden Sun Star', heart: 'Ruby Heart', circle: 'River Lotus Circle', triangle: 'Tea Garden Triangle' },
+  as: { star: 'সোণালী তৰা', heart: 'মৰমৰ হিয়া', circle: 'পদুম ফুলৰ চক্ৰ', triangle: 'চাহ বাগিচাৰ ত্ৰিভুজ' },
+  bn: { star: 'সোনালী তারা', heart: 'হৃদয়', circle: 'গোলাকার চক্র', triangle: 'ত্রিভুজ' },
+  mni: { star: 'থৱানমিচাক', heart: 'থম্মোয়', circle: 'অতেন্বা', triangle: 'অকোয়বা' },
+  hi: { star: 'सुनहरा तारा', heart: 'प्यारा दिल', circle: 'कमल चक्र', triangle: 'सुंदर त्रिकोण' }
+};
+
 const shapesPool: ShapeItem[] = [
-  { id: 'sh1', name: 'Golden Sun Star', icon: 'Star', colorClass: 'text-amber-500 fill-amber-400', bgClass: 'bg-amber-100 border-amber-300' },
-  { id: 'sh2', name: 'Ruby Heart', icon: 'Heart', colorClass: 'text-red-500 fill-red-400', bgClass: 'bg-red-100 border-red-300' },
-  { id: 'sh3', name: 'River Lotus Circle', icon: 'Circle', colorClass: 'text-blue-500 fill-blue-400', bgClass: 'bg-blue-100 border-blue-300' },
-  { id: 'sh4', name: 'Tea Garden Triangle', icon: 'Triangle', colorClass: 'text-emerald-500 fill-emerald-400', bgClass: 'bg-emerald-100 border-emerald-300' }
+  { id: 'sh1', nameKey: 'star', icon: 'Star', colorClass: 'text-amber-500 fill-amber-400', bgClass: 'bg-amber-100 border-amber-300' },
+  { id: 'sh2', nameKey: 'heart', icon: 'Heart', colorClass: 'text-red-500 fill-red-400', bgClass: 'bg-red-100 border-red-300' },
+  { id: 'sh3', nameKey: 'circle', icon: 'Circle', colorClass: 'text-blue-500 fill-blue-400', bgClass: 'bg-blue-100 border-blue-300' },
+  { id: 'sh4', nameKey: 'triangle', icon: 'Triangle', colorClass: 'text-emerald-500 fill-emerald-400', bgClass: 'bg-emerald-100 border-emerald-300' }
 ];
 
 export const ShapeMatchGame: React.FC = () => {
@@ -38,21 +47,30 @@ export const ShapeMatchGame: React.FC = () => {
   const [options, setOptions] = useState<ShapeItem[]>([]);
   const [score, setScore] = useState<number>(0);
   const [round, setRound] = useState<number>(1);
-  const [feedback, setFeedback] = useState<string>('Match the shape shown in the center.');
+  const [feedback, setFeedback] = useState<string>(t.gameInstructionsShape);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [startTime] = useState<number>(Date.now());
+
+  const getShapeName = (shape: ShapeItem) => {
+    return (localizedShapeNames[language] && localizedShapeNames[language][shape.nameKey]) || localizedShapeNames.en[shape.nameKey];
+  };
 
   const setupRound = (r: number) => {
     const target = shapesPool[(r - 1) % shapesPool.length];
     setTargetShape(target);
     const shuffled = [...shapesPool].sort(() => Math.random() - 0.5);
     setOptions(shuffled);
-    setFeedback(`Find the matching shape: ${target.name}`);
+    setFeedback(t.gameInstructionsShape);
   };
 
   useEffect(() => {
     setupRound(round);
-  }, [round]);
+  }, [round, language]);
+
+  const handleReadInstruction = () => {
+    const targetName = getShapeName(targetShape);
+    speakText(`${t.gameInstructionsShape}. ${targetName}`, language);
+  };
 
   const handleSelect = (shape: ShapeItem) => {
     if (shape.id === targetShape.id) {
@@ -70,17 +88,17 @@ export const ShapeMatchGame: React.FC = () => {
         const duration = Math.max(8, Math.round((Date.now() - startTime) / 1000));
         recordCognitiveSession({
           gameType: 'shape_match',
-          gameTitle: 'Soothing Shape Match',
+          gameTitle: t.gameShapeTitle,
           durationSeconds: duration,
           totalAttempts: 4,
           accuracyPercentage: 100,
-          difficulty: 'level_2',
+          difficulty: 'easy',
           responseAverageSeconds: Math.round((duration / 4) * 10) / 10,
           hintsUsed: 0,
           adaptiveDecision: {
             ruleApplied: 'Visual Shape Recognition Rule',
             explanation: 'Perfect shape discrimination. Asha effortlessly identified geometries without visual fatigue.',
-            nextRecommendedDifficulty: 'level_3',
+            nextRecommendedDifficulty: 'medium',
             nextGameType: 'memory_match'
           }
         });
@@ -112,21 +130,30 @@ export const ShapeMatchGame: React.FC = () => {
       <div className="flex items-center justify-between bg-sand-50 p-3 rounded-2xl border border-sand-200">
         <div>
           <span className="text-xs font-black uppercase text-terracotta-700 tracking-wider">
-            Cognitive Focus Activity
+            {t.tabGames}
           </span>
           <h4 className="text-lg font-black text-stone-900">
             {t.gameShapeTitle}
           </h4>
         </div>
-        <span className="text-xs font-bold bg-white px-3 py-1.5 rounded-xl border border-sand-300">
-          Round {round} of 4
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleReadInstruction}
+            className="p-2 bg-sand-100 hover:bg-sand-200 text-terracotta-700 rounded-xl transition active:scale-95"
+            title={t.listenAloudLabel}
+          >
+            <Volume2 className="w-5 h-5" />
+          </button>
+          <span className="text-xs font-bold bg-white px-3 py-1.5 rounded-xl border border-sand-300">
+            {round} / 4
+          </span>
+        </div>
       </div>
 
       {/* Target Shape Display */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-sand-200 shadow-soft text-center space-y-4">
         <span className="text-xs font-black uppercase tracking-widest text-stone-500">
-          Target Shape To Match
+          {t.gameInstructionsShape}
         </span>
 
         <div className={`w-32 h-32 mx-auto rounded-3xl flex items-center justify-center border-4 shadow-md ${targetShape.bgClass} animate-bounce`}>
@@ -134,7 +161,7 @@ export const ShapeMatchGame: React.FC = () => {
         </div>
 
         <h3 className="text-2xl font-black text-stone-900">
-          {targetShape.name}
+          {getShapeName(targetShape)}
         </h3>
 
         <p className="text-sm font-bold text-terracotta-700">
@@ -152,7 +179,7 @@ export const ShapeMatchGame: React.FC = () => {
           >
             {renderIcon(shape.icon, shape.colorClass)}
             <span className="text-xs font-black text-stone-900 text-center">
-              {shape.name}
+              {getShapeName(shape)}
             </span>
           </button>
         ))}
@@ -162,9 +189,9 @@ export const ShapeMatchGame: React.FC = () => {
       {isCompleted && (
         <div className="bg-emerald-600 text-white rounded-3xl p-6 text-center space-y-4 shadow-xl animate-in zoom-in-95">
           <Award className="w-16 h-16 mx-auto text-amber-300" />
-          <h4 className="text-2xl font-black">All Shapes Matched Perfectly!</h4>
+          <h4 className="text-2xl font-black">{t.positiveReinforcement[0]}</h4>
           <p className="text-sm text-emerald-100">
-            Asha scored 100% on shape recognition. Your attention to visual shapes is in great shape!
+            {t.gameShapeTitle}
           </p>
           <button
             onClick={() => {
@@ -172,9 +199,9 @@ export const ShapeMatchGame: React.FC = () => {
               setRound(1);
               setScore(0);
             }}
-            className="py-3 px-6 bg-white text-emerald-950 font-black rounded-2xl text-sm shadow"
+            className="py-3 px-6 bg-white text-emerald-950 font-black rounded-2xl text-sm shadow active:scale-95"
           >
-            Play Again
+            {t.startActivityBtn}
           </button>
         </div>
       )}
@@ -182,3 +209,4 @@ export const ShapeMatchGame: React.FC = () => {
     </div>
   );
 };
+

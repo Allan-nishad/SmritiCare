@@ -158,7 +158,9 @@ export interface PlaceLocation {
 }
 
 export interface NavigationStep {
+  id?: string;
   instruction: string;
+  landmark?: string;
   distanceMeters: number;
   icon: 'straight' | 'turn-right' | 'turn-left' | 'destination';
   voicePrompt: string;

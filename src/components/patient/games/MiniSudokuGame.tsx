@@ -3,17 +3,13 @@ import { useApp } from '../../../context/AppContext';
 import { translations } from '../../../utils/translations';
 import { sounds, speakText } from '../../../utils/audio';
 import confetti from 'canvas-confetti';
-import { Award, RotateCcw, Sparkles, Check, HelpCircle } from 'lucide-react';
+import { Award, RotateCcw, Sparkles, Check, Volume2 } from 'lucide-react';
 
 export const MiniSudokuGame: React.FC = () => {
   const { language, recordCognitiveSession } = useApp();
   const t = translations[language] || translations.en;
 
   // 4x4 Simple Mini Grid (Fixed numbers + 4 easy slots to fill)
-  // [1, 2, 3, 4]
-  // [3, 4, 1, 2]
-  // [2, 1, 4, 3]
-  // [4, 3, 2, 1]
   const initialGrid = [
     [1, 2, 0, 4],
     [3, 0, 1, 2],
@@ -31,8 +27,12 @@ export const MiniSudokuGame: React.FC = () => {
   const [grid, setGrid] = useState<number[][]>(initialGrid);
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>([0, 2]);
   const [isWon, setIsWon] = useState(false);
-  const [feedback, setFeedback] = useState('Fill in the missing numbers (1 to 4) so each row has unique numbers.');
+  const [feedback, setFeedback] = useState(t.gameInstructionsSudoku);
   const [startTime] = useState<number>(Date.now());
+
+  const handleReadInstruction = () => {
+    speakText(t.gameInstructionsSudoku, language);
+  };
 
   const handleCellClick = (r: number, c: number) => {
     if (initialGrid[r][c] !== 0) return; // Locked initial clue
@@ -54,7 +54,9 @@ export const MiniSudokuGame: React.FC = () => {
       setFeedback(phrase);
     } else {
       sounds.playGentleTryAgain();
-      setFeedback("That's okay! Try another number from 1 to 4.");
+      const mistakePhrases = t.positiveMistakeEncouragement;
+      const phrase = mistakePhrases[Math.floor(Math.random() * mistakePhrases.length)];
+      setFeedback(phrase);
     }
 
     // Check complete grid
@@ -70,25 +72,23 @@ export const MiniSudokuGame: React.FC = () => {
     if (allCorrect) {
       setIsWon(true);
       confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
-      const victoryText = language === 'as'
-        ? "অসাধাৰণ আশা দেৱী! সংখ্যাৰ গ্ৰিড সম্পূৰ্ণ হ'ল।"
-        : "Wonderful Asha! You solved the number memory grid.";
+      const victoryText = t.positiveReinforcement[0];
       speakText(victoryText, language);
 
       const duration = Math.max(12, Math.round((Date.now() - startTime) / 1000));
       recordCognitiveSession({
         gameType: 'mini_sudoku',
-        gameTitle: 'Mini Number Memory Grid',
+        gameTitle: t.gameSudokuTitle,
         durationSeconds: duration,
         totalAttempts: 5,
         accuracyPercentage: 88,
-        difficulty: 'level_3',
+        difficulty: 'easy',
         responseAverageSeconds: Math.round((duration / 4) * 10) / 10,
         hintsUsed: 0,
         adaptiveDecision: {
           ruleApplied: 'Logical Working Memory Calibration',
           explanation: 'Working memory intact across numeric arrays. Asha solved 4x4 matrix without frustration.',
-          nextRecommendedDifficulty: 'level_3',
+          nextRecommendedDifficulty: 'medium',
           nextGameType: 'memory_match'
         }
       });
@@ -102,23 +102,32 @@ export const MiniSudokuGame: React.FC = () => {
       <div className="flex items-center justify-between bg-sand-50 p-3 rounded-2xl border border-sand-200">
         <div>
           <span className="text-xs font-black uppercase text-terracotta-700 tracking-wider">
-            Calm Number Puzzle
+            {t.tabGames}
           </span>
           <h4 className="text-lg font-black text-stone-900">
             {t.gameSudokuTitle}
           </h4>
         </div>
-        <button
-          onClick={() => {
-            setGrid(initialGrid);
-            setIsWon(false);
-            setSelectedCell([0, 2]);
-          }}
-          className="p-2 text-stone-600 bg-white hover:bg-sand-100 rounded-xl border border-sand-200"
-          title="Reset puzzle"
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleReadInstruction}
+            className="p-2 bg-sand-100 hover:bg-sand-200 text-terracotta-700 rounded-xl transition active:scale-95"
+            title={t.listenAloudLabel}
+          >
+            <Volume2 className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => {
+              setGrid(initialGrid);
+              setIsWon(false);
+              setSelectedCell([0, 2]);
+            }}
+            className="p-2 text-stone-600 bg-white hover:bg-sand-100 rounded-xl border border-sand-200"
+            title="Reset puzzle"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <p className="text-xs sm:text-sm text-stone-600 font-medium bg-amber-50 p-3 rounded-2xl border border-amber-200 text-center">
@@ -159,7 +168,7 @@ export const MiniSudokuGame: React.FC = () => {
       {!isWon && (
         <div className="max-w-xs mx-auto space-y-2">
           <span className="text-[11px] font-black uppercase text-stone-500 tracking-wider block text-center">
-            Tap a number to place in selected cell:
+            {t.gameInstructionsSudoku}
           </span>
           <div className="grid grid-cols-4 gap-3">
             {[1, 2, 3, 4].map(num => (
@@ -178,11 +187,21 @@ export const MiniSudokuGame: React.FC = () => {
       {/* Win Banner */}
       {isWon && (
         <div className="bg-emerald-600 text-white rounded-3xl p-6 text-center space-y-3 shadow-xl animate-in zoom-in-95">
-          <Award className="w-14 h-14 mx-auto text-amber-300" />
-          <h4 className="text-2xl font-black">Puzzle Solved Peacefully!</h4>
+          <Award className="w-16 h-16 mx-auto text-amber-300" />
+          <h4 className="text-2xl font-black">{t.positiveReinforcement[0]}</h4>
           <p className="text-sm text-emerald-100">
-            Great logic and recall. You kept all 4 numbers balanced in harmony.
+            {t.gameSudokuTitle}
           </p>
+          <button
+            onClick={() => {
+              setGrid(initialGrid);
+              setIsWon(false);
+              setSelectedCell([0, 2]);
+            }}
+            className="py-3 px-6 bg-white text-emerald-950 font-black rounded-2xl text-sm shadow active:scale-95"
+          >
+            {t.startActivityBtn}
+          </button>
         </div>
       )}
 

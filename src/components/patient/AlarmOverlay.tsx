@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { translations } from '../../utils/translations';
+import { translations, getLocalizedRoutine } from '../../utils/translations';
 import { speakText, sounds } from '../../utils/audio';
 import { 
   Bell, 
@@ -17,11 +17,16 @@ import {
 } from 'lucide-react';
 
 export const AlarmOverlay: React.FC = () => {
-  const { alarmOverlay, dismissAlarm, snoozeAlarm, language } = useApp();
+  const { alarmOverlay, dismissAlarm, snoozeAlarm, language, routines } = useApp();
 
   if (!alarmOverlay || !alarmOverlay.isOpen) return null;
 
   const t = translations[language] || translations.en;
+  const routineObj = alarmOverlay.routineId ? routines.find(r => r.id === alarmOverlay.routineId) : null;
+  const locRoutine = routineObj ? getLocalizedRoutine(routineObj, language) : null;
+
+  const displayTitle = locRoutine ? locRoutine.title : alarmOverlay.title;
+  const displaySubtitle = locRoutine ? locRoutine.subtitle : alarmOverlay.subtitle;
 
   const getCategoryIcon = () => {
     switch (alarmOverlay.category) {
@@ -41,7 +46,7 @@ export const AlarmOverlay: React.FC = () => {
   };
 
   const handleReadAloud = () => {
-    const text = `${alarmOverlay.title}. ${alarmOverlay.subtitle}`;
+    const text = locRoutine ? locRoutine.spokenText : `${displayTitle}. ${displaySubtitle}`;
     speakText(text, language);
   };
 
@@ -82,11 +87,11 @@ export const AlarmOverlay: React.FC = () => {
         </div>
         
         <h2 className="text-3xl sm:text-5xl font-black font-serif leading-tight text-white tracking-tight">
-          {alarmOverlay.title}
+          {displayTitle}
         </h2>
 
         <p className="text-lg sm:text-2xl text-stone-300 font-medium leading-snug">
-          {alarmOverlay.subtitle}
+          {displaySubtitle}
         </p>
 
         {alarmOverlay.callerName && (
@@ -103,7 +108,7 @@ export const AlarmOverlay: React.FC = () => {
         className="mb-8 px-6 py-3 bg-stone-800/80 hover:bg-stone-700 text-stone-200 rounded-full font-bold text-base flex items-center gap-2.5 border border-stone-600 active:scale-95 transition"
       >
         <Volume2 className="w-6 h-6 text-amber-400" />
-        <span>Listen to instructions</span>
+        <span>{t.listenAloudLabel}</span>
       </button>
 
       {/* Giant Action Buttons for Elderly Patients */}

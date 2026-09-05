@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
-import { translations } from '../../../utils/translations';
+import { translations, getLocalizedRoutine, getLocalizedDayName } from '../../../utils/translations';
 import { speakText, sounds } from '../../../utils/audio';
 import { 
   Sun, 
@@ -41,21 +41,17 @@ export const MobileHomeTab: React.FC = () => {
   const t = translations[language] || translations.en;
   
   // Find current active routine
-  const nextRoutine = routines.find(r => !r.completed) || routines[0];
+  const rawRoutine = routines.find(r => !r.completed) || routines[0];
+  const nextRoutine = rawRoutine ? getLocalizedRoutine(rawRoutine, language) : null;
   const emergencyPhone = "+91 98765 43210";
+  const todayDayName = getLocalizedDayName(new Date(), language);
 
   // Handle Offline GSM / SMS Emergency SOS
   const handleTriggerOfflineSos = () => {
     setSosDialed(true);
     sounds.playSuccess();
     
-    const reassuranceText = language === 'as'
-      ? "আশা বা, প্ৰিয়াৰ মোবাইল নম্বৰত ফোন কৰা হৈছে। অনুগ্ৰহ কৰি শান্তিৰে বহক।"
-      : language === 'hi'
-      ? "आशा जी, प्रिया के मोबाइल पर सीधे कॉल किया गया है। कृपया शांति से बैठें।"
-      : "Asha, Priya's phone has been dialed. Please remain seated comfortably.";
-
-    speakText(reassuranceText, language);
+    speakText(t.reassuranceSos, language);
 
     addTelemetryLog({
       source: 'patient',
@@ -65,10 +61,14 @@ export const MobileHomeTab: React.FC = () => {
     });
   };
 
+  const handleReadOrientation = () => {
+    const textToRead = `${t.greetingMorning}. ${t.todayLabel} ${todayDayName}. ${t.locationLabel}.`;
+    speakText(textToRead, language);
+  };
+
   const handleReadRoutine = () => {
     if (!nextRoutine) return;
-    const textToRead = `${nextRoutine.title}. ${nextRoutine.subtitle}`;
-    speakText(textToRead, language);
+    speakText(nextRoutine.spokenText, language);
   };
 
   return (
@@ -81,7 +81,7 @@ export const MobileHomeTab: React.FC = () => {
         <div className="bg-amber-400 text-stone-950 p-4 sm:p-5 rounded-3xl shadow-xl border-4 border-amber-300 animate-in zoom-in-95 duration-200 space-y-3">
           <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-950">
             <Bell className="w-5 h-5 text-stone-950 animate-bounce" />
-            <span className="text-sm">Message from Priya</span>
+            <span className="text-sm">{activePushReminder.senderName}</span>
           </div>
 
           <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
@@ -95,7 +95,7 @@ export const MobileHomeTab: React.FC = () => {
                 className="py-3 px-4 bg-sand-100 hover:bg-sand-200 text-stone-900 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 active:scale-95"
               >
                 <Volume2 className="w-5 h-5 text-terracotta-600" />
-                <span>Listen Again</span>
+                <span>{t.listenAloudLabel}</span>
               </button>
 
               <button
@@ -103,7 +103,7 @@ export const MobileHomeTab: React.FC = () => {
                 className="py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-base font-black flex items-center justify-center gap-2 shadow-lg active:scale-95 flex-1"
               >
                 <Check className="w-6 h-6 stroke-[3]" />
-                <span>✓ I Took It, Priya</span>
+                <span>{t.alarmDoneBtn}</span>
               </button>
             </div>
           </div>
@@ -113,37 +113,43 @@ export const MobileHomeTab: React.FC = () => {
       {/* ========================================================= */}
       {/* 2. CALM GREETING & SAFE STATUS (BIG & CLEAR)              */}
       {/* ========================================================= */}
-      <div className="bg-gradient-to-br from-[#df724b] to-[#b34c26] rounded-3xl p-5 text-white shadow-lg space-y-2">
+      <div className="bg-gradient-to-br from-[#df724b] to-[#b34c26] rounded-3xl p-5 text-white shadow-lg space-y-2 relative">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-black bg-white/20 px-3 py-1 rounded-full">
             <Sun className="w-4 h-4 text-amber-300" />
-            <span>Today is Friday</span>
+            <span>{t.todayLabel}: {todayDayName}</span>
           </div>
-          <span className="text-xs font-bold text-amber-200">Morning Sunshine</span>
+          <button
+            onClick={handleReadOrientation}
+            className="p-1.5 bg-white/20 hover:bg-white/30 rounded-full text-amber-200 transition active:scale-95"
+            title={t.listenGreeting}
+          >
+            <Volume2 className="w-4 h-4" />
+          </button>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-black font-serif leading-tight pt-1">
-          Good Morning, Asha
+          {t.greetingMorning}
         </h1>
 
         <div className="flex items-center gap-2 text-xs sm:text-sm text-terracotta-100 font-medium">
           <Heart className="w-4 h-4 text-amber-300 shrink-0 fill-amber-300" />
-          <span>You are safe at home in Guwahati with Priya</span>
+          <span>{t.locationLabel}</span>
         </div>
       </div>
 
       {/* ========================================================= */}
       {/* 3. NEXT ROUTINE (GIANT BUTTON - IMPOSSIBLE TO MISS)       */}
       {/* ========================================================= */}
-      {nextRoutine && (
+      {rawRoutine && nextRoutine && (
         <div className="bg-white rounded-3xl p-5 border-2 border-sand-200 shadow-md space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-terracotta-700 flex items-center gap-1.5">
               <Pill className="w-4 h-4 text-terracotta-600" />
-              <span>What To Do Now</span>
+              <span>{t.whatToDoNow}</span>
             </span>
             <span className="text-xs font-black text-amber-900 bg-amber-100 px-3 py-1 rounded-full">
-              {nextRoutine.time}
+              {rawRoutine.time}
             </span>
           </div>
 
@@ -160,21 +166,21 @@ export const MobileHomeTab: React.FC = () => {
             <button
               onClick={handleReadRoutine}
               className="p-3.5 bg-sand-100 hover:bg-sand-200 text-stone-800 rounded-2xl font-bold flex items-center justify-center transition active:scale-95"
-              title="Read instructions out loud"
+              title={t.listenAloudLabel}
             >
               <Volume2 className="w-6 h-6 text-terracotta-600" />
             </button>
 
             <button
-              onClick={() => toggleRoutine(nextRoutine.id)}
+              onClick={() => toggleRoutine(rawRoutine.id)}
               className={`flex-1 py-4 px-4 rounded-2xl font-black text-base sm:text-lg flex items-center justify-center gap-2 shadow-lg transition active:scale-95 ${
-                nextRoutine.completed
+                rawRoutine.completed
                   ? 'bg-emerald-600 text-white'
                   : 'bg-gradient-to-r from-terracotta-500 to-terracotta-600 hover:from-terracotta-600 text-white'
               }`}
             >
               <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
-              <span>{nextRoutine.completed ? '✓ Done Peacefully' : '✓ I Took My Medicine'}</span>
+              <span>{rawRoutine.completed ? t.completedPeacefully : t.markAsCompleted}</span>
             </button>
           </div>
         </div>
@@ -198,10 +204,10 @@ export const MobileHomeTab: React.FC = () => {
           </div>
           <div>
             <div className="text-base font-black text-stone-900 leading-tight">
-              Memory Game
+              {t.tabGames}
             </div>
             <div className="text-xs text-stone-500 mt-0.5 font-medium">
-              Gentle card matching
+              {t.gameMemoryTitle}
             </div>
           </div>
         </button>
@@ -216,10 +222,10 @@ export const MobileHomeTab: React.FC = () => {
           </div>
           <div>
             <div className="text-base font-black text-white leading-tight">
-              Talk to Smriti
+              {t.talkToSmritiBtn}
             </div>
             <div className="text-xs text-amber-300 mt-0.5 font-medium">
-              Just speak to me
+              {t.voiceTapPrompt}
             </div>
           </div>
         </button>
@@ -235,9 +241,9 @@ export const MobileHomeTab: React.FC = () => {
             <PhoneCall className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-base font-black text-stone-900">Need Help?</div>
+            <div className="text-base font-black text-stone-900">{t.sosEmergencyBtn}</div>
             <div className="text-xs text-stone-600">
-              {isOffline ? 'Offline cellular call' : 'Direct 1-touch call'}
+              {isOffline ? t.offlineNotice : t.callCaregiverBtn}
             </div>
           </div>
         </div>
@@ -246,7 +252,7 @@ export const MobileHomeTab: React.FC = () => {
           onClick={() => setSosModalOpen(true)}
           className="py-3 px-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-sm shadow-md transition active:scale-95 shrink-0"
         >
-          Call Priya
+          {t.callCaregiverBtn}
         </button>
       </div>
 
@@ -263,11 +269,8 @@ export const MobileHomeTab: React.FC = () => {
             {sosDialed ? (
               <div className="space-y-3">
                 <div className="text-emerald-700 font-black text-lg">
-                  Calling Priya Directly...
+                  {t.reassuranceSos}
                 </div>
-                <p className="text-xs text-stone-600 font-medium">
-                  Please stay seated comfortably. Priya is answering your call.
-                </p>
                 <button
                   onClick={() => {
                     setSosModalOpen(false);
@@ -275,16 +278,16 @@ export const MobileHomeTab: React.FC = () => {
                   }}
                   className="w-full py-3 bg-stone-900 text-white font-bold text-sm rounded-2xl"
                 >
-                  Close
+                  OK
                 </button>
               </div>
             ) : (
               <div className="space-y-3">
                 <h3 className="font-black text-lg text-stone-900">
-                  Call Priya Now?
+                  {t.callCaregiverBtn}
                 </h3>
                 <p className="text-xs text-stone-600 font-medium leading-relaxed">
-                  This will ring Priya's mobile phone directly so you can talk to her.
+                  {t.reassuranceSos}
                 </p>
 
                 <div className="pt-2 space-y-2">
@@ -294,7 +297,7 @@ export const MobileHomeTab: React.FC = () => {
                     className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-black text-sm rounded-2xl shadow-md transition active:scale-95 flex items-center justify-center gap-2"
                   >
                     <PhoneCall className="w-5 h-5" />
-                    <span>Dial Priya ({emergencyPhone})</span>
+                    <span>{t.callCaregiverBtn} ({emergencyPhone})</span>
                   </a>
 
                   <button
@@ -313,3 +316,4 @@ export const MobileHomeTab: React.FC = () => {
     </div>
   );
 };
+

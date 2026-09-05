@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../../context/AppContext';
-import { translations } from '../../../utils/translations';
+import { translations, getLocalizedMemory } from '../../../utils/translations';
 import { sounds, speakText } from '../../../utils/audio';
 import confetti from 'canvas-confetti';
 import { 
@@ -27,6 +27,39 @@ interface CardItem {
   isMatched: boolean;
 }
 
+const culturalItemsByLang: Record<string, Array<{ id: string; name: string; relationship: string; imageUrl: string }>> = {
+  as: [
+    { id: 'ner-obj-1', name: 'অসম চাহৰ কেটলী', relationship: 'পুৱাৰ বাৰাণ্ডাৰ চাহ', imageUrl: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-2', name: 'এৰি গামোচা', relationship: 'মৰম আৰু সন্মানৰ প্ৰতীক', imageUrl: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-3', name: 'নৰসিংহ আৰু শেৱালি ফুল', relationship: 'চোতালৰ ফুলনি', imageUrl: 'https://images.unsplash.com/photo-1508615039623-a25605d2b022?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-4', name: 'কাঁহৰ কাঁহী বাটি', relationship: 'পুৰণি পৰম্পৰাগত বাচন', imageUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&q=80&w=400' }
+  ],
+  bn: [
+    { id: 'ner-obj-1', name: 'চায়ের কেটলি', relationship: 'সকালের বারান্দার চা', imageUrl: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-2', name: 'লাল পাড় শাড়ি ও উত্তরীয়', relationship: 'স্নেহ ও ঐতিহ্যের প্রতীক', imageUrl: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-3', name: 'গাঁদা ফুল ও শিউলি', relationship: 'উঠোনের ফুলের বাগান', imageUrl: 'https://images.unsplash.com/photo-1508615039623-a25605d2b022?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-4', name: 'কাঁসার বাসন', relationship: 'ঐতিহ্যবাহী প্রাচীন বাসন', imageUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&q=80&w=400' }
+  ],
+  mni: [
+    { id: 'ner-obj-1', name: 'চা কেটলী', relationship: 'য়ুমথোংগী নুমিদাং চা', imageUrl: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-2', name: 'ফী খূদেই ফীজেৎ', relationship: 'মৈতৈ লৈবাক্কী ফী রোল', imageUrl: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-3', name: 'লৈরাং লৈ', relationship: 'শুমং লৈ কোল', imageUrl: 'https://images.unsplash.com/photo-1508615039623-a25605d2b022?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-4', name: 'পীৎরাই থাবা পুখম', relationship: 'অরিবা ঈমুংগী খুদোল', imageUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&q=80&w=400' }
+  ],
+  hi: [
+    { id: 'ner-obj-1', name: 'चाय की केतली', relationship: 'सुबह बरामदे की गरम चाय', imageUrl: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-2', name: 'पारंपरिक रेशमी गमछा', relationship: 'आदर और सम्मान का प्रतीक', imageUrl: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-3', name: 'गेंदे के ताजे फूल', relationship: 'आंगन की बगिया', imageUrl: 'https://images.unsplash.com/photo-1508615039623-a25605d2b022?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-4', name: 'पीतल के पारंपरिक बर्तन', relationship: 'पारिवारिक धरोहर', imageUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&q=80&w=400' }
+  ],
+  en: [
+    { id: 'ner-obj-1', name: 'Assam Tea Kettle', relationship: 'Morning Veranda Tea', imageUrl: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-2', name: 'Eri Silk Gamosa', relationship: 'Traditional Warmth & Respect', imageUrl: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-3', name: 'Marigold Flowers', relationship: 'Courtyard Garden', imageUrl: 'https://images.unsplash.com/photo-1508615039623-a25605d2b022?auto=format&fit=crop&q=80&w=400' },
+    { id: 'ner-obj-4', name: 'Brass Kahi Bati', relationship: 'Ancestral Utensil', imageUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&q=80&w=400' }
+  ]
+};
+
 export const MemoryMatchGame: React.FC = () => {
   const { 
     familyMemories, 
@@ -47,43 +80,29 @@ export const MemoryMatchGame: React.FC = () => {
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
   const [isPreviewing, setIsPreviewing] = useState<boolean>(true);
   const [previewCountdown, setPreviewCountdown] = useState<number>(3);
-  const [feedbackMessage, setFeedbackMessage] = useState<string>('Look closely at the cards!');
+  const [feedbackMessage, setFeedbackMessage] = useState<string>(
+    language === 'as' ? 'শান্তভাৱে চাওক! ৩ ছেকেণ্ডত কাৰ্ডসমূহ লুটিব...'
+    : language === 'bn' ? 'মন দিয়ে দেখুন! ৩ সেকেন্ডে কার্ডগুলি ঢেকে যাবে...'
+    : language === 'mni' ? 'শান্তিগা লোয়ননা য়েংবীয়ু...'
+    : language === 'hi' ? 'ध्यान से देखें! ३ सेकंड में कार्ड पलट जाएंगे...'
+    : 'Look closely at the cards!'
+  );
   const [hintsUsed, setHintsUsed] = useState<number>(0);
   const [adaptiveSummary, setAdaptiveSummary] = useState<string | null>(null);
 
   // Diverse Cultural + Caregiver personalized items
-  const allCardPool = [
-    ...familyMemories.map(m => ({
+  const culturalItems = culturalItemsByLang[language] || culturalItemsByLang.en;
+  const localizedFamilyMemories = familyMemories.map(m => {
+    const loc = getLocalizedMemory(m, language);
+    return {
       id: m.id,
-      name: m.name,
-      relationship: m.relationship,
+      name: loc.name,
+      relationship: loc.relationship,
       imageUrl: m.photoUrl
-    })),
-    {
-      id: 'ner-obj-1',
-      name: 'Assam Tea Kettle',
-      relationship: 'Morning Veranda Tea',
-      imageUrl: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&q=80&w=400'
-    },
-    {
-      id: 'ner-obj-2',
-      name: 'Eri Silk Gamosa',
-      relationship: 'Traditional Warmth',
-      imageUrl: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=400'
-    },
-    {
-      id: 'ner-obj-3',
-      name: 'Marigold Flowers',
-      relationship: 'Courtyard Garden',
-      imageUrl: 'https://images.unsplash.com/photo-1508615039623-a25605d2b022?auto=format&fit=crop&q=80&w=400'
-    },
-    {
-      id: 'ner-obj-4',
-      name: 'Brass Kahi Bati',
-      relationship: 'Ancestral Utensil',
-      imageUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&q=80&w=400'
-    }
-  ];
+    };
+  });
+
+  const allCardPool = [...localizedFamilyMemories, ...culturalItems];
 
   // Number of pairs per level
   const getPairCountForLevel = (lvl: number) => {
@@ -130,7 +149,12 @@ export const MemoryMatchGame: React.FC = () => {
     setGameCompleted(false);
     setIsPreviewing(true);
     setPreviewCountdown(3);
-    setFeedbackMessage('Take a peaceful look! Cards will flip in 3 seconds...');
+    const previewMsg = language === 'as' ? 'শান্তভাৱে চাওক! ৩ ছেকেণ্ডত কাৰ্ডসমূহ লুটিব...'
+      : language === 'bn' ? 'মন দিয়ে দেখুন! ৩ সেকেন্ডে কার্ডগুলি ঢেকে যাবে...'
+      : language === 'mni' ? 'শান্তিগা লোয়ননা য়েংবীয়ু! চেকেণ্ড ৩ গী মনুংদা হংদোক্কনি...'
+      : language === 'hi' ? 'ध्यान से देखें! ३ सेकंड में कार्ड पलट जाएंगे...'
+      : 'Take a peaceful look! Cards will flip in 3 seconds...';
+    setFeedbackMessage(previewMsg);
     setAdaptiveSummary(null);
 
     // 3-second face-up preview countdown
@@ -142,7 +166,12 @@ export const MemoryMatchGame: React.FC = () => {
         clearInterval(interval);
         setIsPreviewing(false);
         setCards(prev => prev.map(c => ({ ...c, isFlipped: false })));
-        setFeedbackMessage('Tap any card to find its match.');
+        const startMsg = language === 'as' ? 'যিকোনো কাৰ্ডত চুই মিল পোৱাৰ চেষ্টা কৰক।'
+          : language === 'bn' ? 'যেকোনো কার্ডে স্পর্শ করে মিল খুঁজুন।'
+          : language === 'mni' ? 'কাৰ্ড অমদা থমদুনা চাফম থিবীয়ু।'
+          : language === 'hi' ? 'किसी भी कार्ड को छूकर जोड़ी बनाएं।'
+          : 'Tap any card to find its match.';
+        setFeedbackMessage(startMsg);
         setStartTime(Date.now());
       }
     }, 1000);
@@ -253,6 +282,10 @@ export const MemoryMatchGame: React.FC = () => {
 
     const victoryVoice = language === 'as'
       ? "বৰ সুন্দৰ আশা দেৱী! আপুনি সকলো ফটো মিলি পেলালে।"
+      : language === 'bn'
+      ? "অসাধারণ আশা দেবী! আপনি সব ছবি ঠিক মিলিয়েছেন।"
+      : language === 'mni'
+      ? "য়াম্না ফৈ আশা দেবী! নহাক্না ফটো খুদিংমক চানবা থিবা ঙমখ্রে।"
       : language === 'hi'
       ? "बहुत खूब आशा जी! आपने सभी तस्वीरें सही मिला लीं।"
       : "Wonderful job Asha! You matched all the memories.";
@@ -265,10 +298,20 @@ export const MemoryMatchGame: React.FC = () => {
     
     // Briefly peek unmatched cards
     setCards(prev => prev.map(c => !c.isMatched ? { ...c, isFlipped: true } : c));
-    setFeedbackMessage('Here is a gentle 2-second peek to help you!');
+    const hintMsg = language === 'as' ? 'আপোনাৰ সহায়ৰ বাবে ২ ছেকেণ্ডৰ বাবে সকলো কাৰ্ড দেখুওৱা হ’ল!'
+      : language === 'bn' ? 'আপনাকে সাহায্য করতে ২ সেকেন্ডের জন্য সব কার্ড দেখানো হলো!'
+      : language === 'mni' ? 'নহাকপু মতেং পাংনবা চেকেণ্ড ২ গী ওইনা কাৰ্ড পুম্নমক উৎকৎলে!'
+      : language === 'hi' ? 'आपकी मदद के लिए २ सेकंड के लिए सभी कार्ड दिखाए गए हैं!'
+      : 'Here is a gentle 2-second peek to help you!';
+    setFeedbackMessage(hintMsg);
+    speakText(hintMsg, language);
     setTimeout(() => {
       setCards(prev => prev.map(c => !c.isMatched && !flippedCards.includes(cards.indexOf(c)) ? { ...c, isFlipped: false } : c));
     }, 2000);
+  };
+
+  const speakGuidance = () => {
+    speakText(feedbackMessage, language);
   };
 
   return (
@@ -283,14 +326,14 @@ export const MemoryMatchGame: React.FC = () => {
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-black text-stone-900">
-                Memory Match Level {currentLevel}
+                {t.gamePairsLabel || 'Memory Match'} (Lvl {currentLevel})
               </span>
               <span className="text-[10px] bg-terracotta-100 text-terracotta-800 font-bold px-2 py-0.5 rounded-full">
-                {getPairCountForLevel(currentLevel) * 2} Cards
+                {getPairCountForLevel(currentLevel) * 2} {language === 'as' ? 'খন কাৰ্ড' : language === 'bn' ? 'টি কার্ড' : language === 'mni' ? 'কাৰ্ড' : language === 'hi' ? 'कार्ड' : 'Cards'}
               </span>
             </div>
             <p className="text-xs text-stone-500 font-medium">
-              Caregiver personalized photos & NER cultural objects
+              {language === 'as' ? 'পৰিয়ালৰ ফটো আৰু উত্তৰ-পূবৰ পৰম্পৰাগত বস্তু' : language === 'bn' ? 'পারিবারিক ছবি ও পরিচিত ঐতিহ্যবাহী জিনিস' : language === 'mni' ? 'ঈমুংগী ফটো অমসুং কুহ্মৈগী পোৎলমশিং' : language === 'hi' ? 'पारिवारिक यादें और पारंपरिक वस्तुएं' : 'Caregiver personalized photos & NER cultural objects'}
             </p>
           </div>
         </div>
@@ -313,15 +356,21 @@ export const MemoryMatchGame: React.FC = () => {
         </div>
       </div>
 
-      {/* Encouragement & Status Banner */}
+      {/* Encouragement & Status Banner with Voice Read-out */}
       <div className="bg-white p-4 rounded-2xl border-2 border-sand-200 shadow-soft flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
-            {isPreviewing ? <Clock className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5 text-amber-600" />}
-          </div>
+          <button 
+            onClick={speakGuidance}
+            className="w-10 h-10 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-800 flex items-center justify-center shrink-0 transition active:scale-95"
+            title={t.listenVoiceNote || "Listen to guidance"}
+          >
+            {isPreviewing ? <Clock className="w-5 h-5 animate-spin" /> : <Volume2 className="w-5 h-5 text-amber-700" />}
+          </button>
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
-              {isPreviewing ? `Card Preview (${previewCountdown}s)` : 'Companion Guidance'}
+              {isPreviewing 
+                ? (language === 'as' ? `কাৰ্ড চাওক (${previewCountdown}ছে)` : language === 'bn' ? `কার্ড দেখুন (${previewCountdown}সে)` : language === 'mni' ? `কাৰ্ড য়েংবীয়ু (${previewCountdown}s)` : language === 'hi' ? `कार्ड देखें (${previewCountdown}से)` : `Card Preview (${previewCountdown}s)`)
+                : (language === 'as' ? 'সহজ সহায়' : language === 'bn' ? 'সহজ নির্দেশ' : language === 'mni' ? 'লমজিং' : language === 'hi' ? 'सहज मार्गदर्शन' : 'Companion Guidance')}
             </span>
             <p className="text-base sm:text-lg font-black text-stone-900 leading-tight">
               {feedbackMessage}
@@ -336,7 +385,7 @@ export const MemoryMatchGame: React.FC = () => {
               className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition active:scale-95"
             >
               <HelpCircle className="w-4 h-4 text-amber-700" />
-              <span>Gentle Peek</span>
+              <span>{language === 'as' ? 'সহায় চাওক' : language === 'bn' ? 'সহায়তা' : language === 'mni' ? 'মতেং' : language === 'hi' ? 'मदद' : 'Gentle Peek'}</span>
             </button>
           )}
 
@@ -403,7 +452,7 @@ export const MemoryMatchGame: React.FC = () => {
                     <Heart className="w-6 h-6 text-amber-300 fill-amber-300/30" />
                   </div>
                   <span className="text-[11px] font-bold text-amber-200 mt-2 tracking-wider uppercase">
-                    Smriti
+                    {t.appName || 'Smriti'}
                   </span>
                 </div>
               )}
@@ -421,16 +470,24 @@ export const MemoryMatchGame: React.FC = () => {
             </div>
             <div>
               <span className="text-xs font-black uppercase tracking-widest text-emerald-200">
-                Memory Activity Complete
+                {language === 'as' ? 'খেলা সম্পূৰ্ণ হ’ল' : language === 'bn' ? 'খেলা সম্পন্ন হয়েছে' : language === 'mni' ? 'শান্নবা লোইরে' : language === 'hi' ? 'खेल पूरा हुआ' : 'Memory Activity Complete'}
               </span>
               <h3 className="text-2xl sm:text-3xl font-black font-serif">
-                Wonderful Recall, Asha!
+                {language === 'as' ? 'বৰ সুন্দৰ আশা দেৱী!' : language === 'bn' ? 'অসাধারণ আশা দেবী!' : language === 'mni' ? 'য়াম্না ফৈ আশা দেবী!' : language === 'hi' ? 'बहुत खूब आशा जी!' : 'Wonderful Recall, Asha!'}
               </h3>
             </div>
           </div>
 
           <p className="text-base text-emerald-100 font-medium">
-            You completed Level {currentLevel} in {attempts} attempts. Your memory connection with family and familiar items is shining bright!
+            {language === 'as' 
+              ? `আপুনি ${attempts} বাৰত লেভেল ${currentLevel} সম্পূৰ্ণ কৰিলে। আপোনাৰ স্মৃতিশক্তি উজ্জ্বল হৈ আছে!`
+              : language === 'bn'
+              ? `আপনি ${attempts} বারে লেভেল ${currentLevel} শেষ করেছেন। আপনার স্মরণশক্তি দারুণ!`
+              : language === 'mni'
+              ? `নহাক্না লেভেল ${currentLevel} লোইশিনখ্রে। নহাক্কী স্মৃতী শক্তি ফৈ!`
+              : language === 'hi'
+              ? `आपने ${attempts} प्रयासों में स्तर ${currentLevel} पूरा किया। आपकी याददाश्त बहुत अच्छी है!`
+              : `You completed Level ${currentLevel} in ${attempts} attempts. Your memory connection with family and familiar items is shining bright!`}
           </p>
 
           {/* Explainable Adaptive AI Decision Box */}
@@ -451,7 +508,7 @@ export const MemoryMatchGame: React.FC = () => {
               onClick={() => setupLevel(Math.min(5, currentLevel + 1))}
               className="flex-1 py-4 px-6 bg-white text-emerald-950 font-black rounded-2xl text-base sm:text-lg shadow-xl hover:bg-sand-50 transition active:scale-95 flex items-center justify-center gap-2"
             >
-              <span>Play Next Level (Lvl {Math.min(5, currentLevel + 1)})</span>
+              <span>{language === 'as' ? `পৰৱৰ্তী লেভেল খেলক (Lvl ${Math.min(5, currentLevel + 1)})` : language === 'bn' ? `পরবর্তী লেভেল খেলুন (Lvl ${Math.min(5, currentLevel + 1)})` : language === 'mni' ? `মথংগী লেভেল (Lvl ${Math.min(5, currentLevel + 1)})` : language === 'hi' ? `अगला स्तर खेलें (Lvl ${Math.min(5, currentLevel + 1)})` : `Play Next Level (Lvl ${Math.min(5, currentLevel + 1)})`}</span>
               <ChevronRight className="w-5 h-5" />
             </button>
 
@@ -459,7 +516,7 @@ export const MemoryMatchGame: React.FC = () => {
               onClick={() => setupLevel(currentLevel)}
               className="py-4 px-6 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl text-base transition active:scale-95"
             >
-              Play Level {currentLevel} Again
+              {language === 'as' ? `পুনৰ খেলক (Lvl ${currentLevel})` : language === 'bn' ? `আবার খেলুন (Lvl ${currentLevel})` : language === 'mni' ? `অমুক্কা শান্নবীয়ু` : language === 'hi' ? `फिर से खेलें` : `Play Level ${currentLevel} Again`}
             </button>
           </div>
         </div>

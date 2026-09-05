@@ -1,30 +1,45 @@
 import React from 'react';
 import { useApp } from '../../../context/AppContext';
+import { translations } from '../../../utils/translations';
+import { speakText } from '../../../utils/audio';
 import { MemoryMatchGame } from '../../patient/games/MemoryMatchGame';
 import { PatternSequenceGame } from '../../patient/games/PatternSequenceGame';
 import { AssociationGame } from '../../patient/games/AssociationGame';
-import { Brain, Sparkles, Award, Layers, Compass, HelpCircle } from 'lucide-react';
+import { Brain, Sparkles, Award, Layers, Volume2 } from 'lucide-react';
 
 export const MobileGamesTab: React.FC = () => {
-  const { activeGameTab, setActiveGameTab, cognitiveSessions } = useApp();
+  const { activeGameTab, setActiveGameTab, cognitiveSessions, language } = useApp();
   const lastSession = cognitiveSessions[0];
+  const t = translations[language] || translations.en;
+
+  const handleReadGameRule = () => {
+    let instruction = t.gameInstructionsMemory;
+    if (activeGameTab === 'pattern_sequence') instruction = t.gameInstructionsPattern;
+    if (activeGameTab === 'word_association') instruction = t.gameInstructionsAssociation;
+    speakText(instruction, language);
+  };
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="space-y-4 pb-4 select-none">
       {/* Header Banner */}
       <div className="bg-white rounded-2xl p-4 border border-sand-200 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-bold text-terracotta-700">
             <Brain className="w-4 h-4 text-terracotta-600" />
-            <span>NER Cognitive Exercises</span>
+            <span>{t.tabGames}</span>
           </div>
-          <span className="text-[10px] font-bold text-sage-800 bg-sage-100 px-2 py-0.5 rounded-full border border-sage-200">
-            Adaptive N-of-1
-          </span>
+          <button
+            onClick={handleReadGameRule}
+            className="flex items-center gap-1 text-[11px] font-bold text-terracotta-700 bg-sand-100 hover:bg-sand-200 px-2.5 py-1 rounded-full transition active:scale-95"
+            title={t.listenAloudLabel}
+          >
+            <Volume2 className="w-3.5 h-3.5 text-terracotta-600" />
+            <span>{t.listenAloudLabel}</span>
+          </button>
         </div>
 
         <p className="text-xs text-stone-600">
-          Culturally familiar games with zero rush, positive reinforcement, and self-calibrating pace.
+          {t.gameInstructionsMemory}
         </p>
 
         {/* 3 Game Sub-Tabs */}
@@ -37,8 +52,7 @@ export const MobileGamesTab: React.FC = () => {
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
-            <span>🦏 Match</span>
-            <span className="text-[9px] font-normal text-stone-500">Pairs</span>
+            <span>🦏 {t.gamePairsLabel}</span>
           </button>
 
           <button
@@ -49,8 +63,7 @@ export const MobileGamesTab: React.FC = () => {
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
-            <span>🫖 Rhythm</span>
-            <span className="text-[9px] font-normal text-stone-500">Order</span>
+            <span>🫖 {t.gameRhythmLabel}</span>
           </button>
 
           <button
@@ -61,8 +74,7 @@ export const MobileGamesTab: React.FC = () => {
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
-            <span>🧣 Words</span>
-            <span className="text-[9px] font-normal text-stone-500">Connect</span>
+            <span>🧣 {t.gameWordsLabel}</span>
           </button>
         </div>
       </div>
@@ -80,15 +92,16 @@ export const MobileGamesTab: React.FC = () => {
           <div className="flex items-center justify-between font-bold text-stone-900">
             <span className="flex items-center gap-1">
               <Award className="w-3.5 h-3.5 text-amber-600" />
-              <span>Last Session Result</span>
+              <span>{t.lastSessionResult}</span>
             </span>
-            <span className="text-terracotta-700 font-extrabold">{lastSession.accuracyPercentage}% Accuracy</span>
+            <span className="text-terracotta-700 font-extrabold">{lastSession.accuracyPercentage}%</span>
           </div>
           <p className="text-[11px] text-stone-500">
-            {lastSession.adaptiveDecision?.explanation || "Great focus shown during the session."}
+            {lastSession.adaptiveDecision?.explanation || t.positiveReinforcement[0]}
           </p>
         </div>
       )}
     </div>
   );
 };
+

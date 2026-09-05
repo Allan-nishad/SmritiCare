@@ -1,65 +1,27 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { sounds, speakText } from '../../../utils/audio';
+import { translations, getLocalizedAssociationDeck } from '../../../utils/translations';
 import confetti from 'canvas-confetti';
-import { Sparkles, CheckCircle2, RotateCcw, Heart, Award, ArrowRight, Brain } from 'lucide-react';
-
-interface AssociationQuestion {
-  promptIcon: string;
-  promptTitle: string;
-  promptSubtext: string;
-  options: { icon: string; title: string; isCorrect: boolean }[];
-  explanation: string;
-}
-
-const associationDeck: AssociationQuestion[] = [
-  {
-    promptIcon: '🫖',
-    promptTitle: 'Fresh Assam Tea',
-    promptSubtext: 'Morning beverage brewed on the stove',
-    options: [
-      { icon: '☕', title: 'Tea Cup', isCorrect: true },
-      { icon: '👞', title: 'Walking Shoe', isCorrect: false },
-      { icon: '📚', title: 'Story Book', isCorrect: false },
-      { icon: '🪑', title: 'Wooden Chair', isCorrect: false }
-    ],
-    explanation: 'Tea is lovingly poured into a warm tea cup to enjoy on the veranda.'
-  },
-  {
-    promptIcon: '🌾',
-    promptTitle: 'Bihu Festival Celebration',
-    promptSubtext: 'Joyful harvest festival of Assam',
-    options: [
-      { icon: '🥁', title: 'Bihu Dhol (Drum)', isCorrect: true },
-      { icon: '🚗', title: 'Motor Car', isCorrect: false },
-      { icon: '🔑', title: 'House Key', isCorrect: false },
-      { icon: '📻', title: 'Transistor Radio', isCorrect: false }
-    ],
-    explanation: 'The traditional Dhol drum plays cheerful rhythms for the Bihu dance.'
-  },
-  {
-    promptIcon: '🌧️',
-    promptTitle: 'Monsoon Rain Shower',
-    promptSubtext: 'Rain drops falling gently on the tin roof',
-    options: [
-      { icon: '☂️', title: 'Umbrella / Japi', isCorrect: true },
-      { icon: '🥄', title: 'Eating Spoon', isCorrect: false },
-      { icon: '🕯️', title: 'Candle Light', isCorrect: false },
-      { icon: '🪡', title: 'Sewing Needle', isCorrect: false }
-    ],
-    explanation: 'The woven Japi hat or umbrella keeps us dry in the fresh monsoon rain.'
-  }
-];
+import { Sparkles, CheckCircle2, RotateCcw, Heart, Award, ArrowRight, Brain, Volume2 } from 'lucide-react';
 
 export const AssociationGame: React.FC = () => {
-  const { recordCognitiveSession } = useApp();
+  const { recordCognitiveSession, language } = useApp();
   const [index, setIndex] = useState(0);
   const [selectedOpt, setSelectedOpt] = useState<string | null>(null);
-  const [gentleStatus, setGentleStatus] = useState<string>("Which friendly object belongs naturally with the main picture?");
   const [isCompleted, setIsCompleted] = useState(false);
   const [attempts, setAttempts] = useState(0);
 
+  const t = translations[language] || translations.en;
+  const associationDeck = getLocalizedAssociationDeck(language);
   const currentQ = associationDeck[index] || associationDeck[0];
+
+  const [gentleStatus, setGentleStatus] = useState<string>(t.gameInstructionsAssociation);
+
+  const handleReadQuestion = () => {
+    const textToSpeak = `${t.gameInstructionsAssociation}. ${currentQ.promptTitle}: ${currentQ.promptSubtext}`;
+    speakText(textToSpeak, language);
+  };
 
   const handleSelect = (opt: { icon: string; title: string; isCorrect: boolean }) => {
     setSelectedOpt(opt.title);
@@ -68,19 +30,19 @@ export const AssociationGame: React.FC = () => {
     if (opt.isCorrect) {
       sounds.playSuccess();
       confetti({ particleCount: 50, spread: 50 });
-      setGentleStatus(`That's right! ${currentQ.explanation}`);
-      speakText(`Wonderful, Asha! ${opt.title} is the perfect match!`);
+      setGentleStatus(currentQ.explanation);
+      speakText(currentQ.spokenSuccess, language);
 
       setTimeout(() => {
         if (index + 1 < associationDeck.length) {
           setIndex(prev => prev + 1);
           setSelectedOpt(null);
-          setGentleStatus("Let's look at the next familiar connection.");
+          setGentleStatus(t.gameInstructionsAssociation);
         } else {
           setIsCompleted(true);
           recordCognitiveSession({
             gameType: 'word_association',
-            gameTitle: 'Word & Object Connections',
+            gameTitle: t.gameAssociationTitle,
             durationSeconds: 50,
             totalAttempts: attempts + 1,
             accuracyPercentage: 92,
@@ -98,27 +60,38 @@ export const AssociationGame: React.FC = () => {
       }, 1600);
     } else {
       sounds.playSoftTryAgain();
-      setGentleStatus("Let's try another one. Think of what we use together with it.");
+      const phrases = t.positiveMistakeEncouragement;
+      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+      setGentleStatus(phrase);
     }
   };
 
   return (
-    <div className="bg-white rounded-[2rem] p-5 sm:p-7 border-2 border-sand-200 shadow-soft max-w-3xl mx-auto">
+    <div className="bg-white rounded-[2rem] p-5 sm:p-7 border-2 border-sand-200 shadow-soft max-w-3xl mx-auto select-none">
       
       {/* Top Header */}
       <div className="flex items-center justify-between gap-3 pb-4 border-b border-sand-200">
         <div>
           <div className="inline-flex items-center gap-1.5 bg-sage-100 text-sage-800 text-xs font-bold px-3 py-1 rounded-full border border-sage-200 mb-1">
             <Sparkles className="w-3.5 h-3.5 text-sage-600" />
-            <span>Activity 3 of 3 • Semantic Connection</span>
+            <span>{t.gameAssociationTitle}</span>
           </div>
           <h3 className="text-xl sm:text-2xl font-extrabold text-stone-900 font-serif">
-            Word & Object Connections
+            {t.gameWordsLabel}
           </h3>
         </div>
 
-        <div className="bg-sand-100 px-3 py-1.5 rounded-xl border border-sand-200 text-xs font-bold text-stone-700">
-          Question {index + 1} of {associationDeck.length}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleReadQuestion}
+            className="p-2 bg-sand-100 hover:bg-sand-200 rounded-xl text-terracotta-700 transition active:scale-95"
+            title={t.listenAloudLabel}
+          >
+            <Volume2 className="w-5 h-5" />
+          </button>
+          <div className="bg-sand-100 px-3 py-1.5 rounded-xl border border-sand-200 text-xs font-bold text-stone-700">
+            {index + 1} / {associationDeck.length}
+          </div>
         </div>
       </div>
 
@@ -149,7 +122,7 @@ export const AssociationGame: React.FC = () => {
           {/* Options Grid */}
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-3 text-center">
-              Tap the matching item:
+              {t.gameInstructionsAssociation}
             </div>
             <div className="grid grid-cols-2 gap-3">
               {currentQ.options.map((opt, optIdx) => (
@@ -170,7 +143,7 @@ export const AssociationGame: React.FC = () => {
                       {opt.title}
                     </span>
                     <span className="text-[11px] text-stone-500 font-medium">
-                      Tap to select
+                      {t.doYouRememberPrompt}?
                     </span>
                   </div>
                 </button>
@@ -187,21 +160,11 @@ export const AssociationGame: React.FC = () => {
           </div>
 
           <h4 className="text-2xl font-extrabold text-stone-900 mb-1 font-serif">
-            Excellent Connection, Asha!
+            {t.positiveReinforcement[0]}
           </h4>
           <p className="text-stone-600 text-sm mb-5">
-            You completed all semantic associations with great warmth.
+            {t.gameAssociationTitle}
           </p>
-
-          <div className="bg-white rounded-2xl p-4 border-2 border-terracotta-200 text-left max-w-md mx-auto mb-6 shadow-sm">
-            <div className="flex items-center gap-2 text-terracotta-700 font-bold text-xs uppercase tracking-wider mb-1">
-              <Brain className="w-4 h-4 text-terracotta-600" />
-              <span>SmritiCare Semantic Intelligence</span>
-            </div>
-            <p className="text-stone-800 font-medium text-sm leading-relaxed">
-              "Object associations remain vivid and consistent (92% recall accuracy). The system preserves these familiar anchors in your daily reminiscence feed."
-            </p>
-          </div>
 
           <button
             onClick={() => {
@@ -212,7 +175,7 @@ export const AssociationGame: React.FC = () => {
             className="btn-elder-secondary text-sm inline-flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>Review Associations</span>
+            <span>{t.startActivityBtn}</span>
           </button>
         </div>
       )}
@@ -220,3 +183,4 @@ export const AssociationGame: React.FC = () => {
     </div>
   );
 };
+

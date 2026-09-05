@@ -7,6 +7,7 @@ import { MobileRoutineTab } from './tabs/MobileRoutineTab';
 import { MobileSafetyTab } from './tabs/MobileSafetyTab';
 import { MobileCaregiverTab } from './tabs/MobileCaregiverTab';
 import { LanguageSelector } from '../shared/LanguageSelector';
+import { translations } from '../../utils/translations';
 import { 
   Smartphone, 
   Activity, 
@@ -46,6 +47,8 @@ export const DualDeviceExperience: React.FC = () => {
     language,
     location
   } = useApp();
+
+  const t = translations[language] || translations.en;
 
   // Left Phone Tab State (Asha)
   const [patientTab, setPatientTab] = useState<'home' | 'games' | 'memories' | 'routine' | 'safety'>('home');
@@ -276,7 +279,7 @@ export const DualDeviceExperience: React.FC = () => {
                     }`}
                   >
                     <Home className={`w-4 h-4 ${patientTab === 'home' ? 'stroke-[2.5]' : ''}`} />
-                    <span className="text-[9px]">Home</span>
+                    <span className="text-[9px] truncate max-w-[55px]">{t.tabHome}</span>
                   </button>
 
                   <button
@@ -286,7 +289,7 @@ export const DualDeviceExperience: React.FC = () => {
                     }`}
                   >
                     <Brain className={`w-4 h-4 ${patientTab === 'games' ? 'stroke-[2.5]' : ''}`} />
-                    <span className="text-[9px]">Games</span>
+                    <span className="text-[9px] truncate max-w-[55px]">{t.tabGames}</span>
                   </button>
 
                   <button
@@ -296,7 +299,7 @@ export const DualDeviceExperience: React.FC = () => {
                     }`}
                   >
                     <Heart className={`w-4 h-4 ${patientTab === 'memories' ? 'stroke-[2.5]' : ''}`} />
-                    <span className="text-[9px]">Memories</span>
+                    <span className="text-[9px] truncate max-w-[55px]">{t.tabMemories}</span>
                   </button>
 
                   <button
@@ -306,7 +309,7 @@ export const DualDeviceExperience: React.FC = () => {
                     }`}
                   >
                     <Calendar className={`w-4 h-4 ${patientTab === 'routine' ? 'stroke-[2.5]' : ''}`} />
-                    <span className="text-[9px]">Routine</span>
+                    <span className="text-[9px] truncate max-w-[55px]">{t.tabRoutine}</span>
                   </button>
 
                   <button
@@ -316,7 +319,7 @@ export const DualDeviceExperience: React.FC = () => {
                     }`}
                   >
                     <ShieldAlert className={`w-4 h-4 ${patientTab === 'safety' ? 'stroke-[2.5] text-emerald-600' : ''}`} />
-                    <span className="text-[9px]">Safety/Map</span>
+                    <span className="text-[9px] truncate max-w-[55px]">{t.tabSafety}</span>
                   </button>
 
                 </div>
