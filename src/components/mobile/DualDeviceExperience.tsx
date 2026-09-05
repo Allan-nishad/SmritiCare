@@ -31,7 +31,8 @@ import {
   ChevronDown,
   ChevronUp,
   MapPin,
-  ListFilter
+  ListFilter,
+  Bell
 } from 'lucide-react';
 
 export const DualDeviceExperience: React.FC = () => {
@@ -48,7 +49,10 @@ export const DualDeviceExperience: React.FC = () => {
     location,
     activePatientTab,
     setActivePatientTab,
-    triggerSimulation
+    triggerSimulation,
+    alarmOverlay,
+    dismissAlarm,
+    snoozeAlarm
   } = useApp();
 
   const t = translations[language] || translations.en;
@@ -348,12 +352,57 @@ export const DualDeviceExperience: React.FC = () => {
               </div>
 
               {/* Patient Content Body */}
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3.5 no-scrollbar">
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3.5 no-scrollbar relative">
                 {activePatientTab === 'home' && <MobileHomeTab />}
                 {activePatientTab === 'games' && <MobileGamesTab />}
                 {activePatientTab === 'memories' && <MobileMemoriesTab />}
                 {activePatientTab === 'routine' && <MobileRoutineTab />}
                 {activePatientTab === 'safety' && <MobileSafetyTab />}
+
+                {/* IN-PHONE ALARM OVERLAY (Visible directly on the phone mockup) */}
+                {alarmOverlay?.isOpen && (
+                  <div className="absolute inset-0 z-40 bg-black/95 backdrop-blur-md p-5 flex flex-col items-center justify-between text-white text-center rounded-2xl animate-in zoom-in-95">
+                    <div className="w-full flex items-center justify-between pt-2">
+                      <span className="text-[10px] font-mono font-bold bg-amber-400 text-stone-950 px-2 py-0.5 rounded-full">
+                        {alarmOverlay.time}
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-300 flex items-center gap-1 uppercase">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                        Alarm Ringing
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 my-auto">
+                      <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-terracotta-600 to-amber-500 flex items-center justify-center shadow-xl border-2 border-white/20 animate-bounce">
+                        <Bell className="w-10 h-10 text-amber-200" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black font-serif text-amber-300">
+                          {alarmOverlay.title}
+                        </h3>
+                        <p className="text-xs text-stone-300 mt-1 font-medium">
+                          {alarmOverlay.subtitle}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="w-full space-y-2 pb-2">
+                      <button
+                        onClick={() => dismissAlarm(true)}
+                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-1.5"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>✓ Done (Take Medicine)</span>
+                      </button>
+                      <button
+                        onClick={snoozeAlarm}
+                        className="w-full py-2 bg-white/15 hover:bg-white/20 text-stone-300 font-bold text-xs rounded-xl transition"
+                      >
+                        Snooze 10 Minutes
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Floating Voice Button */}

@@ -75,7 +75,9 @@ export const ChangeInsights: React.FC = () => {
                       {alert.timestamp}
                     </span>
                     <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border ${
-                      alert.significance === 'Meaningful Check-in'
+                      alert.significance === 'High Priority' || alert.type === 'sos' || alert.type === 'snooze_warning' || alert.title.toLowerCase().includes('warning') || alert.title.toLowerCase().includes('geofence')
+                        ? 'bg-red-200 text-red-950 border-red-400 animate-pulse font-black'
+                        : alert.significance === 'Meaningful Check-in'
                         ? 'bg-amber-100 text-amber-900 border-amber-300'
                         : 'bg-sand-200 text-stone-700 border-sand-300'
                     }`}>
@@ -88,22 +90,42 @@ export const ChangeInsights: React.FC = () => {
                     )}
                   </div>
 
-                  <h4 className="text-lg font-extrabold text-stone-900">
+                  <h4 className={`text-lg font-extrabold ${
+                    alert.significance === 'High Priority' || alert.type === 'sos' || alert.type === 'snooze_warning' || alert.title.toLowerCase().includes('warning') || alert.title.toLowerCase().includes('geofence')
+                      ? 'text-red-950'
+                      : 'text-stone-900'
+                  }`}>
                     {alert.title}
                   </h4>
-                  <p className="text-xs sm:text-sm text-stone-700 font-medium">
+                  <p className={`text-xs sm:text-sm font-medium ${
+                    alert.significance === 'High Priority' || alert.type === 'sos' || alert.type === 'snooze_warning' || alert.title.toLowerCase().includes('warning') || alert.title.toLowerCase().includes('geofence')
+                      ? 'text-red-900'
+                      : 'text-stone-700'
+                  }`}>
                     {alert.description}
                   </p>
 
                   {/* 3-Point Explainer: What Changed & Suggested Action */}
-                  <div className="bg-white p-3.5 rounded-2xl border border-sand-200 space-y-1.5 text-xs text-stone-800">
+                  <div className={`p-3.5 rounded-2xl border space-y-1.5 text-xs ${
+                    alert.significance === 'High Priority' || alert.type === 'sos' || alert.type === 'snooze_warning' || alert.title.toLowerCase().includes('warning') || alert.title.toLowerCase().includes('geofence')
+                      ? 'bg-red-100/70 border-red-300 text-red-950'
+                      : 'bg-white border-sand-200 text-stone-800'
+                  }`}>
                     <div>
-                      <strong className="text-stone-900">What changed: </strong>
-                      <span className="text-stone-600">{alert.whatChanged}</span>
+                      <strong className={alert.significance === 'High Priority' || alert.type === 'sos' ? 'text-red-950' : 'text-stone-900'}>
+                        What changed: 
+                      </strong>
+                      <span className={alert.significance === 'High Priority' || alert.type === 'sos' ? 'text-red-900 ml-1' : 'text-stone-600 ml-1'}>
+                        {alert.whatChanged}
+                      </span>
                     </div>
                     <div>
-                      <strong className="text-terracotta-700">Suggested action: </strong>
-                      <span className="text-stone-700 font-medium">{alert.suggestedAction}</span>
+                      <strong className={alert.significance === 'High Priority' || alert.type === 'sos' ? 'text-red-700' : 'text-terracotta-700'}>
+                        Suggested action: 
+                      </strong>
+                      <span className={alert.significance === 'High Priority' || alert.type === 'sos' ? 'text-red-950 font-bold ml-1' : 'text-stone-700 font-medium ml-1'}>
+                        {alert.suggestedAction}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -123,6 +145,8 @@ export const ChangeInsights: React.FC = () => {
                     className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition shadow-sm active:scale-95 ${
                       alert.actionTaken
                         ? 'bg-sage-100 text-sage-800 border border-sage-300'
+                        : alert.significance === 'High Priority' || alert.type === 'sos' || alert.type === 'snooze_warning' || alert.title.toLowerCase().includes('warning') || alert.title.toLowerCase().includes('geofence')
+                        ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/30'
                         : 'bg-terracotta-600 hover:bg-terracotta-700 text-white shadow-terracotta-600/20'
                     }`}
                   >
