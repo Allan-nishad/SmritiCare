@@ -60,6 +60,7 @@ export const DualDeviceExperience: React.FC = () => {
   const [showLogsDrawer, setShowLogsDrawer] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeToast, setActiveToast] = useState<string | null>(null);
+  const [activeCaregiverTab, setActiveCaregiverTab] = useState<'performance' | 'map' | 'patient_info'>('performance');
 
   const handleQuickSim = (scenario: any, label: string) => {
     triggerSimulation(scenario);
@@ -563,16 +564,57 @@ export const DualDeviceExperience: React.FC = () => {
 
               {/* Caregiver Scrollable Body */}
               <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3.5 no-scrollbar">
-                <MobileCaregiverTab />
+                <MobileCaregiverTab 
+                  activePage={activeCaregiverTab} 
+                  onPageChange={setActiveCaregiverTab} 
+                  hideTopSwitcher 
+                />
               </div>
 
-              {/* Caregiver Bottom Nav Indicator */}
-              <div className="bg-white/95 backdrop-blur-md border-t border-sand-200 px-4 py-2 shrink-0 z-30 shadow-md flex items-center justify-between text-xs font-bold text-stone-600">
-                <span className="flex items-center gap-1 text-sage-700">
-                  <Activity className="w-4 h-4 text-sage-600" />
-                  <span>Caregiver Dashboard</span>
-                </span>
-                <span className="text-[10px] text-stone-400 font-mono">Synced</span>
+              {/* 3-Tab Caregiver Bottom Navigation (Matches Patient Phone Bottom Interface) */}
+              <div className="bg-white/95 backdrop-blur-md border-t border-sand-200 px-3 py-1.5 shrink-0 z-30 shadow-md">
+                <div className="grid grid-cols-3 gap-1 text-center">
+                  
+                  <button
+                    onClick={() => setActiveCaregiverTab('performance')}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      activeCaregiverTab === 'performance'
+                        ? 'text-[#356859] font-black'
+                        : 'text-stone-500 font-medium hover:text-[#356859]'
+                    }`}
+                  >
+                    <Activity className={`w-4 h-4 ${activeCaregiverTab === 'performance' ? 'stroke-[2.5] text-[#356859]' : ''}`} />
+                    <span className="text-[10px] truncate max-w-[85px]">Health & Vitals</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveCaregiverTab('map')}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      activeCaregiverTab === 'map'
+                        ? 'text-[#356859] font-black'
+                        : 'text-stone-500 font-medium hover:text-[#356859]'
+                    }`}
+                  >
+                    <MapPin className={`w-4 h-4 ${activeCaregiverTab === 'map' ? 'stroke-[2.5] text-[#D88965]' : ''}`} />
+                    <span className="text-[10px] truncate max-w-[85px]">Safety Map</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveCaregiverTab('patient_info')}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      activeCaregiverTab === 'patient_info'
+                        ? 'text-[#356859] font-black'
+                        : 'text-stone-500 font-medium hover:text-[#356859]'
+                    }`}
+                  >
+                    <User className={`w-4 h-4 ${activeCaregiverTab === 'patient_info' ? 'stroke-[2.5] text-[#356859]' : ''}`} />
+                    <span className="text-[10px] truncate max-w-[85px]">Patient Info</span>
+                  </button>
+
+                </div>
+                
+                {/* iOS Home Indicator Bar */}
+                <div className="w-24 h-1 bg-stone-300 rounded-full mx-auto mt-1" />
               </div>
 
             </div>

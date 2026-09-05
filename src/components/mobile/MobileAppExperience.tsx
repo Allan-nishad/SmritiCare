@@ -30,6 +30,7 @@ import {
   ExternalLink,
   ChevronLeft,
   User,
+  MapPin,
   ShieldCheck
 } from 'lucide-react';
 
@@ -51,6 +52,7 @@ export const MobileAppExperience: React.FC = () => {
   const t = translations[language] || translations.en;
   const [copiedLink, setCopiedLink] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [caregiverSubTab, setCaregiverSubTab] = useState<'performance' | 'map' | 'patient_info'>('performance');
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}${window.location.pathname}#mobile`;
@@ -259,88 +261,158 @@ export const MobileAppExperience: React.FC = () => {
               {mobileTab === 'games' && <MobileGamesTab />}
               {mobileTab === 'memories' && <MobileMemoriesTab />}
               {mobileTab === 'routine' && <MobileRoutineTab />}
-              {mobileTab === 'caregiver' && <MobileCaregiverTab />}
+              {mobileTab === 'caregiver' && (
+                <MobileCaregiverTab 
+                  activePage={caregiverSubTab} 
+                  onPageChange={setCaregiverSubTab} 
+                  hideTopSwitcher 
+                />
+              )}
             </div>
 
             {/* Floating Mobile Voice Button */}
-            <div className="absolute right-4 bottom-20 z-40">
-              <button
-                onClick={() => setIsVoiceOpen(true)}
-                className="w-13 h-13 rounded-full bg-gradient-to-tr from-terracotta-600 to-terracotta-500 hover:from-terracotta-700 hover:to-terracotta-600 text-white shadow-xl flex items-center justify-center transition active:scale-90 border-2 border-white ring-4 ring-terracotta-500/20"
-                title="Talk to Smriti Voice Assistant"
-              >
-                <Mic className="w-6 h-6 animate-pulse" />
-              </button>
-            </div>
+            {mobileSubRole === 'patient' && (
+              <div className="absolute right-4 bottom-20 z-40">
+                <button
+                  onClick={() => setIsVoiceOpen(true)}
+                  className="w-13 h-13 rounded-full bg-gradient-to-tr from-terracotta-600 to-terracotta-500 hover:from-terracotta-700 hover:to-terracotta-600 text-white shadow-xl flex items-center justify-center transition active:scale-90 border-2 border-white ring-4 ring-terracotta-500/20"
+                  title="Talk to Smriti Voice Assistant"
+                >
+                  <Mic className="w-6 h-6 animate-pulse" />
+                </button>
+              </div>
+            )}
 
             {/* Native Bottom Navigation Bar */}
             <div className="bg-white/95 backdrop-blur-md border-t border-sand-200 px-2 py-1.5 shrink-0 z-30 shadow-lg">
-              <div className="grid grid-cols-5 gap-1 text-center">
-                
-                <button
-                  onClick={() => setMobileTab('home')}
-                  className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
-                    mobileTab === 'home'
-                      ? 'text-terracotta-600 font-bold'
-                      : 'text-stone-500 hover:text-stone-800 font-medium'
-                  }`}
-                >
-                  <Home className={`w-5 h-5 ${mobileTab === 'home' ? 'stroke-[2.5]' : ''}`} />
-                  <span className="text-[10px] truncate max-w-[55px]">{t.tabHome}</span>
-                </button>
+              {mobileSubRole === 'caregiver' ? (
+                <div className="grid grid-cols-4 gap-1 text-center">
+                  
+                  <button
+                    onClick={() => {
+                      setCaregiverSubTab('performance');
+                      setMobileTab('caregiver');
+                    }}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      caregiverSubTab === 'performance'
+                        ? 'text-[#356859] font-black'
+                        : 'text-stone-500 hover:text-stone-800 font-medium'
+                    }`}
+                  >
+                    <Activity className={`w-5 h-5 ${caregiverSubTab === 'performance' ? 'stroke-[2.5] text-[#356859]' : ''}`} />
+                    <span className="text-[9.5px] truncate max-w-[65px]">Health</span>
+                  </button>
 
-                <button
-                  onClick={() => setMobileTab('games')}
-                  className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
-                    mobileTab === 'games'
-                      ? 'text-terracotta-600 font-bold'
-                      : 'text-stone-500 hover:text-stone-800 font-medium'
-                  }`}
-                >
-                  <Brain className={`w-5 h-5 ${mobileTab === 'games' ? 'stroke-[2.5]' : ''}`} />
-                  <span className="text-[10px] truncate max-w-[55px]">{t.tabGames}</span>
-                </button>
+                  <button
+                    onClick={() => {
+                      setCaregiverSubTab('map');
+                      setMobileTab('caregiver');
+                    }}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      caregiverSubTab === 'map'
+                        ? 'text-[#356859] font-black'
+                        : 'text-stone-500 hover:text-stone-800 font-medium'
+                    }`}
+                  >
+                    <MapPin className={`w-5 h-5 ${caregiverSubTab === 'map' ? 'stroke-[2.5] text-[#D88965]' : ''}`} />
+                    <span className="text-[9.5px] truncate max-w-[65px]">Safety Map</span>
+                  </button>
 
-                <button
-                  onClick={() => setMobileTab('memories')}
-                  className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
-                    mobileTab === 'memories'
-                      ? 'text-terracotta-600 font-bold'
-                      : 'text-stone-500 hover:text-stone-800 font-medium'
-                  }`}
-                >
-                  <Heart className={`w-5 h-5 ${mobileTab === 'memories' ? 'stroke-[2.5]' : ''}`} />
-                  <span className="text-[10px] truncate max-w-[55px]">{t.tabMemories}</span>
-                </button>
+                  <button
+                    onClick={() => {
+                      setCaregiverSubTab('patient_info');
+                      setMobileTab('caregiver');
+                    }}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      caregiverSubTab === 'patient_info'
+                        ? 'text-[#356859] font-black'
+                        : 'text-stone-500 hover:text-stone-800 font-medium'
+                    }`}
+                  >
+                    <User className={`w-5 h-5 ${caregiverSubTab === 'patient_info' ? 'stroke-[2.5] text-[#356859]' : ''}`} />
+                    <span className="text-[9.5px] truncate max-w-[65px]">Patient Info</span>
+                  </button>
 
-                <button
-                  onClick={() => setMobileTab('routine')}
-                  className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
-                    mobileTab === 'routine'
-                      ? 'text-terracotta-600 font-bold'
-                      : 'text-stone-500 hover:text-stone-800 font-medium'
-                  }`}
-                >
-                  <Calendar className={`w-5 h-5 ${mobileTab === 'routine' ? 'stroke-[2.5]' : ''}`} />
-                  <span className="text-[10px] truncate max-w-[55px]">{t.tabRoutine}</span>
-                </button>
+                  <button
+                    onClick={() => {
+                      setMobileSubRole('patient');
+                      setMobileTab('home');
+                    }}
+                    className="py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition text-stone-500 hover:text-stone-800 font-medium"
+                  >
+                    <Home className="w-5 h-5" />
+                    <span className="text-[9.5px] truncate max-w-[65px]">Asha's App</span>
+                  </button>
 
-                <button
-                  onClick={() => {
-                    setMobileTab('caregiver');
-                    setMobileSubRole('caregiver');
-                  }}
-                  className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
-                    mobileTab === 'caregiver'
-                      ? 'text-sage-700 font-bold'
-                      : 'text-stone-500 hover:text-stone-800 font-medium'
-                  }`}
-                >
-                  <Activity className={`w-5 h-5 ${mobileTab === 'caregiver' ? 'stroke-[2.5]' : ''}`} />
-                  <span className="text-[10px] truncate max-w-[55px]">{t.tabCaregiver}</span>
-                </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-5 gap-1 text-center">
+                  
+                  <button
+                    onClick={() => setMobileTab('home')}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      mobileTab === 'home'
+                        ? 'text-terracotta-600 font-bold'
+                        : 'text-stone-500 hover:text-stone-800 font-medium'
+                    }`}
+                  >
+                    <Home className={`w-5 h-5 ${mobileTab === 'home' ? 'stroke-[2.5]' : ''}`} />
+                    <span className="text-[10px] truncate max-w-[55px]">{t.tabHome}</span>
+                  </button>
 
-              </div>
+                  <button
+                    onClick={() => setMobileTab('games')}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      mobileTab === 'games'
+                        ? 'text-terracotta-600 font-bold'
+                        : 'text-stone-500 hover:text-stone-800 font-medium'
+                    }`}
+                  >
+                    <Brain className={`w-5 h-5 ${mobileTab === 'games' ? 'stroke-[2.5]' : ''}`} />
+                    <span className="text-[10px] truncate max-w-[55px]">{t.tabGames}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setMobileTab('memories')}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      mobileTab === 'memories'
+                        ? 'text-terracotta-600 font-bold'
+                        : 'text-stone-500 hover:text-stone-800 font-medium'
+                    }`}
+                  >
+                    <Heart className={`w-5 h-5 ${mobileTab === 'memories' ? 'stroke-[2.5]' : ''}`} />
+                    <span className="text-[10px] truncate max-w-[55px]">{t.tabMemories}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setMobileTab('routine')}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      mobileTab === 'routine'
+                        ? 'text-terracotta-600 font-bold'
+                        : 'text-stone-500 hover:text-stone-800 font-medium'
+                    }`}
+                  >
+                    <Calendar className={`w-5 h-5 ${mobileTab === 'routine' ? 'stroke-[2.5]' : ''}`} />
+                    <span className="text-[10px] truncate max-w-[55px]">{t.tabRoutine}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setMobileTab('caregiver');
+                      setMobileSubRole('caregiver');
+                    }}
+                    className={`py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition ${
+                      mobileTab === 'caregiver'
+                        ? 'text-sage-700 font-bold'
+                        : 'text-stone-500 hover:text-stone-800 font-medium'
+                    }`}
+                  >
+                    <Activity className={`w-5 h-5 ${mobileTab === 'caregiver' ? 'stroke-[2.5]' : ''}`} />
+                    <span className="text-[10px] truncate max-w-[55px]">{t.tabCaregiver}</span>
+                  </button>
+
+                </div>
+              )}
 
               {/* iOS Home Indicator Bar */}
               <div className="w-32 h-1 bg-stone-300 rounded-full mx-auto mt-1.5" />

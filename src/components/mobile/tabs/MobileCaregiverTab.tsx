@@ -37,7 +37,17 @@ import {
   Navigation
 } from 'lucide-react';
 
-export const MobileCaregiverTab: React.FC = () => {
+interface MobileCaregiverTabProps {
+  activePage?: 'performance' | 'map' | 'patient_info';
+  onPageChange?: (page: 'performance' | 'map' | 'patient_info') => void;
+  hideTopSwitcher?: boolean;
+}
+
+export const MobileCaregiverTab: React.FC<MobileCaregiverTabProps> = ({
+  activePage: propActivePage,
+  onPageChange: propOnPageChange,
+  hideTopSwitcher = false
+}) => {
   const { 
     patient, 
     baselineMetrics, 
@@ -64,7 +74,9 @@ export const MobileCaregiverTab: React.FC = () => {
   } = useApp();
 
   // 3 Master Pages inside Mobile Caregiver Hub: 1) Health, 2) Map, 3) Patient Info & Feeding
-  const [activeMobilePage, setActiveMobilePage] = useState<'performance' | 'map' | 'patient_info'>('performance');
+  const [internalActivePage, setInternalActivePage] = useState<'performance' | 'map' | 'patient_info'>('performance');
+  const activeMobilePage = propActivePage || internalActivePage;
+  const setActiveMobilePage = propOnPageChange || setInternalActivePage;
 
   const [customText, setCustomText] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -179,44 +191,46 @@ export const MobileCaregiverTab: React.FC = () => {
         </div>
       )}
 
-      {/* 3-PAGE MASTER TABS SWITCHER */}
-      <div className="flex p-1 bg-[#EEF4EC] rounded-xl border border-[#A8C3A0]/60 shadow-inner gap-1">
-        <button
-          onClick={() => setActiveMobilePage('performance')}
-          className={`flex-1 py-2 px-1.5 rounded-lg text-[10.5px] font-black transition-all flex items-center justify-center gap-1 ${
-            activeMobilePage === 'performance'
-              ? 'bg-[#356859] text-white shadow-sm'
-              : 'text-[#26332F] hover:text-[#356859]'
-          }`}
-        >
-          <Activity className="w-3.5 h-3.5 text-[#D88965]" />
-          <span>1. 📊 Health</span>
-        </button>
+      {/* 3-PAGE MASTER TABS SWITCHER (Shown only if not in bottom nav mode) */}
+      {!hideTopSwitcher && (
+        <div className="flex p-1 bg-[#EEF4EC] rounded-xl border border-[#A8C3A0]/60 shadow-inner gap-1">
+          <button
+            onClick={() => setActiveMobilePage('performance')}
+            className={`flex-1 py-2 px-1.5 rounded-lg text-[10.5px] font-black transition-all flex items-center justify-center gap-1 ${
+              activeMobilePage === 'performance'
+                ? 'bg-[#356859] text-white shadow-sm'
+                : 'text-[#26332F] hover:text-[#356859]'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5 text-[#D88965]" />
+            <span>1. 📊 Health</span>
+          </button>
 
-        <button
-          onClick={() => setActiveMobilePage('map')}
-          className={`flex-1 py-2 px-1.5 rounded-lg text-[10.5px] font-black transition-all flex items-center justify-center gap-1 ${
-            activeMobilePage === 'map'
-              ? 'bg-[#356859] text-white shadow-sm'
-              : 'text-[#26332F] hover:text-[#356859]'
-          }`}
-        >
-          <MapPin className="w-3.5 h-3.5 text-[#D88965]" />
-          <span>2. 🗺️ Safety Map</span>
-        </button>
+          <button
+            onClick={() => setActiveMobilePage('map')}
+            className={`flex-1 py-2 px-1.5 rounded-lg text-[10.5px] font-black transition-all flex items-center justify-center gap-1 ${
+              activeMobilePage === 'map'
+                ? 'bg-[#356859] text-white shadow-sm'
+                : 'text-[#26332F] hover:text-[#356859]'
+            }`}
+          >
+            <MapPin className="w-3.5 h-3.5 text-[#D88965]" />
+            <span>2. 🗺️ Safety Map</span>
+          </button>
 
-        <button
-          onClick={() => setActiveMobilePage('patient_info')}
-          className={`flex-1 py-2 px-1.5 rounded-lg text-[10.5px] font-black transition-all flex items-center justify-center gap-1 ${
-            activeMobilePage === 'patient_info'
-              ? 'bg-[#356859] text-white shadow-sm'
-              : 'text-[#26332F] hover:text-[#356859]'
-          }`}
-        >
-          <User className="w-3.5 h-3.5 text-[#A8C3A0]" />
-          <span>3. 🗂️ Info</span>
-        </button>
-      </div>
+          <button
+            onClick={() => setActiveMobilePage('patient_info')}
+            className={`flex-1 py-2 px-1.5 rounded-lg text-[10.5px] font-black transition-all flex items-center justify-center gap-1 ${
+              activeMobilePage === 'patient_info'
+                ? 'bg-[#356859] text-white shadow-sm'
+                : 'text-[#26332F] hover:text-[#356859]'
+            }`}
+          >
+            <User className="w-3.5 h-3.5 text-[#A8C3A0]" />
+            <span>3. 🗂️ Info</span>
+          </button>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* PAGE 1: HEALTH, SMART WEARABLES & RED ALERTS                              */}
