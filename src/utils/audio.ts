@@ -1,7 +1,10 @@
-// Offline Web Audio chime synthesizer & Web Speech synthesis for SmritiCare
+import { LanguageCode } from '../types';
 
-class SoundEffects {
+class SoundSynthesizer {
   private ctx: AudioContext | null = null;
+  private musicGain: GainNode | null = null;
+  private isMusicPlaying: boolean = false;
+  private musicInterval: any = null;
 
   private initCtx() {
     if (!this.ctx && typeof window !== 'undefined') {
@@ -11,89 +14,180 @@ class SoundEffects {
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
     }
   }
 
-  // Gentle calming chime when a card is flipped
+  // Play a soft peaceful tone
+  playTone(freq: number, type: OscillatorType, duration: number, volume: number = 0.15) {
+    try {
+      this.initCtx();
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+      gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration);
+    } catch (e) {
+      // Audio fallback silent catch
+    }
+  }
+
+  // Card Flip Sound (warm click)
+  playCardFlip() {
+    this.playTone(320, 'sine', 0.12, 0.1);
+  }
+
   playFlip() {
-    try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(320, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(440, this.ctx.currentTime + 0.12);
-      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.15);
-    } catch (e) {
-      // safe fallback
-    }
+    this.playCardFlip();
   }
 
-  // Warm comforting double-chime for positive match
+  // Positive Encouragement / Match Success Chime (ascending pentatonic notes)
   playSuccess() {
-    try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const now = this.ctx.currentTime;
-      [523.25, 659.25, 783.99].forEach((freq, idx) => {
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, now + idx * 0.1);
-        gain.gain.setValueAtTime(0.12, now + idx * 0.1);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.45);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now + idx * 0.1);
-        osc.stop(now + idx * 0.1 + 0.45);
-      });
-    } catch (e) {
-      // safe fallback
+    const notes = [440, 554, 659, 880];
+    notes.forEach((freq, idx) => {
+      setTimeout(() => {
+        this.playTone(freq, 'triangle', 0.35, 0.12);
+      }, idx * 75);
+    });
+  }
+
+  // Soft Mistake / Try Again (warm non-harsh tone)
+  playGentleTryAgain() {
+    this.playTone(392, 'sine', 0.25, 0.08);
+    setTimeout(() => {
+      this.playTone(330, 'sine', 0.3, 0.08);
+    }, 120);
+  }
+
+  playSoftTryAgain() {
+    this.playGentleTryAgain();
+  }
+
+  // Alarm Ringing Tone (pulsing high-visibility notification)
+  playAlarm() {
+    const tones = [587.33, 880, 587.33, 880];
+    tones.forEach((freq, idx) => {
+      setTimeout(() => {
+        this.playTone(freq, 'sine', 0.2, 0.2);
+      }, idx * 180);
+    });
+  }
+
+  // Phone Ringtone Simulation for SOS calls
+  playPhoneRing() {
+    this.playTone(440, 'sine', 0.8, 0.18);
+    setTimeout(() => this.playTone(480, 'sine', 0.8, 0.18), 50);
+  }
+
+  // Background Soothing Music Synthesizer (Assamese Flute / Peaceful Chords)
+  startBackgroundMusic(trackType: 'folk' | 'flute' | 'river_ambient' | 'bihu' = 'flute') {
+    this.initCtx();
+    if (!this.ctx) return;
+    this.stopBackgroundMusic();
+    this.isMusicPlaying = true;
+
+    // Peaceful pentatonic scales (Sa-Re-Ga-Pa-Dha)
+    const scale = trackType === 'flute'
+      ? [293.66, 329.63, 369.99, 440.00, 493.88, 587.33] // D Major Pentatonic
+      : trackType === 'bihu'
+      ? [329.63, 369.99, 440.00, 493.88, 554.37, 659.25] // E Major Folk Rhythm
+      : [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; // C Major Peaceful Ambient
+
+    let step = 0;
+    const playNextNote = () => {
+      if (!this.isMusicPlaying || !this.ctx) return;
+      const note = scale[Math.floor(Math.random() * scale.length)];
+      const duration = trackType === 'bihu' ? 0.6 : 1.4;
+      this.playTone(note, 'sine', duration, 0.04);
+
+      // Add gentle sub-harmonic drone every 4th note
+      if (step % 4 === 0) {
+        this.playTone(scale[0] / 2, 'triangle', 2.2, 0.02);
+      }
+      step++;
+    };
+
+    playNextNote();
+    this.musicInterval = setInterval(playNextNote, trackType === 'bihu' ? 900 : 1600);
+  }
+
+  stopBackgroundMusic() {
+    this.isMusicPlaying = false;
+    if (this.musicInterval) {
+      clearInterval(this.musicInterval);
+      this.musicInterval = null;
     }
   }
 
-  // Gentle "try again" soft acoustic tap (never harsh or red)
-  playSoftTryAgain() {
-    try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(280, this.ctx.currentTime);
-      gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.2);
-    } catch (e) {
-      // safe fallback
-    }
+  isMusicActive() {
+    return this.isMusicPlaying;
   }
 }
 
-export const sounds = new SoundEffects();
+export const sounds = new SoundSynthesizer();
 
-export const speakText = (text: string, lang: string = 'en-IN') => {
-  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = lang;
-      utterance.rate = 0.88; // Relaxed, comforting speaking speed for elderly users
-      utterance.pitch = 1.05; // Warm pitch
-      window.speechSynthesis.speak(utterance);
-    } catch (err) {
-      console.warn('Speech synthesis unavailable or blocked:', err);
+/**
+ * Enhanced Web Speech API Voice Synthesis with regional NER language codes & Male/Female profile variations
+ */
+export function speakText(
+  text: string, 
+  lang: string = 'en', 
+  options?: { gender?: 'female' | 'male'; rate?: number }
+) {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    console.warn('Web Speech API not supported in this browser.');
+    return;
+  }
+
+  // Cancel ongoing speech
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  
+  // Language mappings for Indian regional voices
+  const langMap: Record<string, string> = {
+    en: 'en-IN',
+    'en-IN': 'en-IN',
+    as: 'as-IN',
+    'as-IN': 'as-IN',
+    bn: 'bn-IN',
+    'bn-IN': 'bn-IN',
+    hi: 'hi-IN',
+    'hi-IN': 'hi-IN',
+    mni: 'mni-IN',
+    'mni-IN': 'mni-IN'
+  };
+
+  utterance.lang = langMap[lang] || 'en-IN';
+  utterance.rate = options?.rate || 0.88; // Slightly gentle, slower pace for elderly ease
+  
+  // Pitch adjustment for male / female family member personalization
+  if (options?.gender === 'male') {
+    utterance.pitch = 0.82; // Lower, deeper tone for Son (Rahul / Ravi)
+  } else {
+    utterance.pitch = 1.15; // Warmer, maternal/daughter tone for Meera / Priya
+  }
+
+  // Attempt to find best matching voice
+  const voices = window.speechSynthesis.getVoices();
+  if (voices && voices.length > 0) {
+    const cleanLang = lang.split('-')[0];
+    const targetLangPrefix = cleanLang === 'as' ? 'bn' : cleanLang === 'mni' ? 'bn' : cleanLang;
+    const matchingVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) || v.lang.startsWith('hi') || v.lang.startsWith('en-IN'));
+    if (matchingVoice) {
+      utterance.voice = matchingVoice;
     }
   }
-};
+
+  window.speechSynthesis.speak(utterance);
+}

@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../utils/translations';
 import { speakText, sounds } from '../../utils/audio';
 import { MemoryMatchGame } from './games/MemoryMatchGame';
 import { PatternSequenceGame } from './games/PatternSequenceGame';
 import { AssociationGame } from './games/AssociationGame';
+import { ShapeMatchGame } from './games/ShapeMatchGame';
+import { MiniSudokuGame } from './games/MiniSudokuGame';
 import { MemoriesThatMatter } from './MemoriesThatMatter';
+import { SafetyCenter } from './SafetyCenter';
 import { 
   Sun, 
   Mic, 
@@ -25,7 +28,8 @@ import {
   ShieldCheck,
   Brain,
   Layers,
-  Link as LinkIcon
+  Shapes,
+  Grid
 } from 'lucide-react';
 
 export const PatientHome: React.FC = () => {
@@ -40,35 +44,31 @@ export const PatientHome: React.FC = () => {
     activePushReminder,
     acknowledgePushReminder,
     isOffline,
-    addTelemetryLog
+    location,
+    triggerAlarm
   } = useApp();
 
-  const [sosModalOpen, setSosModalOpen] = useState(false);
-  const [sosDialed, setSosDialed] = useState(false);
+  const [currentTimeStr, setCurrentTimeStr] = useState<string>('');
+  const [currentDateStr, setCurrentDateStr] = useState<string>('');
+  const [selectedMainSection, setSelectedMainSection] = useState<'home' | 'games' | 'memories' | 'safety'>('home');
 
   const t = translations[language] || translations.en;
   const nextRoutine = routines.find(r => !r.completed) || routines[0];
-  const emergencyPhone = "+91 98765 43210";
 
-  const handleTriggerOfflineSos = () => {
-    setSosDialed(true);
-    sounds.playSuccess();
-    
-    const reassuranceText = language === 'as'
-      ? "আশা বা, প্ৰিয়াৰ মোবাইল নম্বৰত ফোন কৰা হৈছে। অনুগ্ৰহ কৰি শান্তিৰে বহক।"
-      : language === 'hi'
-      ? "आशा जी, प्रिया के मोबाइल पर सीधे कॉल किया गया है। कृपया शांति से बैठें।"
-      : "Asha, Priya's phone has been dialed. Please remain seated comfortably.";
+  // Live Clock & Date for Orientation Support (Specification 22)
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      setCurrentTimeStr(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      
+      const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+      setCurrentDateStr(now.toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'bn' ? 'bn-IN' : 'en-IN', options));
+    };
 
-    speakText(reassuranceText, language);
-
-    addTelemetryLog({
-      source: 'patient',
-      title: 'Offline GSM Emergency Call Triggered',
-      detail: `Direct GSM cellular call placed to ${emergencyPhone}.`,
-      type: 'sos'
-    });
-  };
+    updateDateTime();
+    const timer = setInterval(updateDateTime, 1000);
+    return () => clearInterval(timer);
+  }, [language]);
 
   const handleReadRoutine = () => {
     if (!nextRoutine) return;
@@ -84,7 +84,7 @@ export const PatientHome: React.FC = () => {
         <div className="bg-amber-400 text-stone-950 p-6 rounded-[2.5rem] shadow-xl border-4 border-amber-300 animate-in zoom-in-95 duration-200 space-y-4">
           <div className="flex items-center gap-2.5 text-sm font-black uppercase tracking-wider text-amber-950">
             <Bell className="w-6 h-6 text-stone-950 animate-bounce" />
-            <span className="text-base">Spoken Voice Reminder from Priya</span>
+            <span className="text-base">Spoken Voice Reminder from {activePushReminder.senderName}</span>
           </div>
 
           <div className="bg-white rounded-3xl p-6 shadow-sm space-y-4">
@@ -106,62 +106,84 @@ export const PatientHome: React.FC = () => {
                 className="py-4 px-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-lg font-black flex items-center gap-3 shadow-lg active:scale-95 flex-1 justify-center"
               >
                 <Check className="w-7 h-7 stroke-[3]" />
-                <span>✓ I Took It, Priya</span>
+                <span>✓ I Took It / Done</span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 2. Warm Peaceful Greeting Banner */}
+      {/* 2. Orientation Header (Specification 22: Day, Date, Time, Location, Next up) */}
       <div className="bg-gradient-to-br from-[#df724b] via-[#c95d36] to-[#b34c26] rounded-[2.5rem] p-6 sm:p-10 text-white shadow-touch relative overflow-hidden">
         <div className="relative z-10 space-y-4">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-bold text-white border border-white/20">
-            <Sun className="w-4 h-4 text-amber-300" />
-            <span>Friday Morning • Pleasant Sunshine</span>
+          
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold text-white border border-white/20">
+              <Calendar className="w-4 h-4 text-amber-300" />
+              <span>{currentDateStr || 'Today'}</span>
+            </div>
+
+            <div className="inline-flex items-center gap-2 bg-stone-950/40 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-mono font-bold text-amber-300 border border-white/10">
+              <Clock className="w-4 h-4" />
+              <span>{currentTimeStr || '10:30 AM'}</span>
+            </div>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black font-serif tracking-tight leading-tight">
-            Good Morning, Asha
-          </h1>
-
-          <div className="flex items-center gap-2.5 text-base sm:text-lg text-terracotta-100 font-medium">
-            <Heart className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0" />
-            <span>You are safe at home in Guwahati with Priya</span>
+          <div>
+            <span className="text-xs sm:text-sm uppercase tracking-widest font-black text-amber-200 block">
+              {t.greetingMorning}
+            </span>
+            <h1 className="text-3xl sm:text-5xl font-black font-serif tracking-tight leading-tight mt-1">
+              Asha Devi
+            </h1>
           </div>
 
-          {/* 2 Big Clear Actions */}
-          <div className="flex flex-wrap items-center gap-4 pt-2">
+          <div className="flex items-center gap-2.5 text-sm sm:text-base text-terracotta-100 font-medium">
+            <MapPin className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0" />
+            <span>{location.address}</span>
+          </div>
+
+          {/* Quick Action Navigation Bar */}
+          <div className="flex flex-wrap items-center gap-3 pt-3">
             <button
               onClick={() => {
+                setSelectedMainSection('games');
                 setActiveGameTab('memory_match');
-                const el = document.getElementById('simple-games-section');
+                const el = document.getElementById('patient-games-view');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="bg-white hover:bg-sand-50 text-terracotta-800 font-black px-6 sm:px-8 py-4 rounded-2xl text-base sm:text-lg shadow-xl transition-all active:scale-95 flex items-center gap-3 border-2 border-white"
+              className="bg-white hover:bg-sand-50 text-terracotta-800 font-black px-6 py-4 rounded-2xl text-base shadow-xl transition-all active:scale-95 flex items-center gap-2.5 border-2 border-white"
             >
-              <Play className="w-6 h-6 fill-terracotta-600 text-terracotta-600" />
-              <span>Play Memory Game</span>
+              <Play className="w-5 h-5 fill-terracotta-600 text-terracotta-600" />
+              <span>{t.startActivityBtn}</span>
             </button>
 
             <button
               onClick={() => setIsVoiceOpen(true)}
-              className="bg-stone-900/90 hover:bg-black text-white font-black px-6 sm:px-8 py-4 rounded-2xl text-base sm:text-lg backdrop-blur-md transition-all active:scale-95 flex items-center gap-3 border border-white/20 shadow-xl"
+              className="bg-stone-900/90 hover:bg-black text-white font-black px-6 py-4 rounded-2xl text-base backdrop-blur-md transition-all active:scale-95 flex items-center gap-2.5 border border-white/20 shadow-xl"
             >
-              <Mic className="w-6 h-6 text-amber-300 animate-pulse" />
-              <span>Talk to Smriti (Voice)</span>
+              <Mic className="w-5 h-5 text-amber-300 animate-pulse" />
+              <span>{t.talkToSmritiBtn}</span>
+            </button>
+
+            <button
+              onClick={() => setSelectedMainSection('safety')}
+              className="bg-emerald-700/80 hover:bg-emerald-800 text-white font-black px-5 py-4 rounded-2xl text-base backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 border border-white/20 shadow-xl"
+            >
+              <Compass className="w-5 h-5 text-emerald-300" />
+              <span>{t.safetyCenterTitle}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* 3. Next Medicine / Routine Tile (Large & High Contrast) */}
+      {/* 3. Next Up Routine Tile (Large touch targets & Voice instruction) */}
       {nextRoutine && (
         <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border-2 border-sand-200 shadow-soft space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-wider text-terracotta-700">
               <Pill className="w-5 h-5 text-terracotta-600" />
-              <span>What To Do Now</span>
+              <span>{t.nextUpLabel}</span>
             </div>
             <span className="text-xs sm:text-sm font-black text-amber-900 bg-amber-100 px-4 py-1.5 rounded-full border border-amber-200">
               {nextRoutine.time}
@@ -195,40 +217,65 @@ export const PatientHome: React.FC = () => {
               }`}
             >
               <CheckCircle2 className="w-7 h-7 stroke-[2.5]" />
-              <span>{nextRoutine.completed ? '✓ Completed Peacefully' : '✓ I Took My Medicine'}</span>
+              <span>{nextRoutine.completed ? '✓ Completed Peacefully' : '✓ Mark as Completed'}</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* 4. Cognitive Memory Match Game Section */}
-      <section id="simple-games-section" className="scroll-mt-24 space-y-4">
-        <div className="flex items-center justify-between">
+      {/* 4. Cognitive Gaming Hub (Specification 13, 14, 15, 16) */}
+      <section id="patient-games-view" className="scroll-mt-24 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-stone-900 font-serif">
-              Memory Games
+              Cognitive Activities
             </h2>
             <p className="text-xs sm:text-sm text-stone-600 font-medium">
-              Gentle, relaxing card matching with zero rush.
+              Gentle memory games personalized with family photos and familiar NER memories.
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-sand-200 p-1.5 rounded-2xl">
+          {/* 5 Game Categories Selector */}
+          <div className="flex items-center gap-1.5 bg-sand-200 p-1.5 rounded-2xl overflow-x-auto no-scrollbar max-w-full">
             <button
               onClick={() => setActiveGameTab('memory_match')}
-              className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${
                 activeGameTab === 'memory_match' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
               }`}
             >
-              Match Game
+              Memory Match
             </button>
             <button
               onClick={() => setActiveGameTab('pattern_sequence')}
-              className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${
                 activeGameTab === 'pattern_sequence' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
               }`}
             >
-              Rhythm
+              Rhythm Pattern
+            </button>
+            <button
+              onClick={() => setActiveGameTab('word_association')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${
+                activeGameTab === 'word_association' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
+              }`}
+            >
+              Object Match
+            </button>
+            <button
+              onClick={() => setActiveGameTab('shape_match')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${
+                activeGameTab === 'shape_match' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
+              }`}
+            >
+              Shapes
+            </button>
+            <button
+              onClick={() => setActiveGameTab('mini_sudoku')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap ${
+                activeGameTab === 'mini_sudoku' ? 'bg-white text-terracotta-700 shadow-sm' : 'text-stone-600'
+              }`}
+            >
+              Number Grid
             </button>
           </div>
         </div>
@@ -237,93 +284,21 @@ export const PatientHome: React.FC = () => {
           {activeGameTab === 'memory_match' && <MemoryMatchGame />}
           {activeGameTab === 'pattern_sequence' && <PatternSequenceGame />}
           {activeGameTab === 'word_association' && <AssociationGame />}
+          {activeGameTab === 'shape_match' && <ShapeMatchGame />}
+          {activeGameTab === 'mini_sudoku' && <MiniSudokuGame />}
         </div>
       </section>
 
-      {/* 5. Family Memories Section */}
+      {/* 5. Family Memories Reminiscence Section (Specification 20) */}
       <MemoriesThatMatter />
 
-      {/* 6. Big Emergency Call Card */}
-      <div className="bg-red-50 border-2 border-red-200 rounded-[2.5rem] p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-        <div className="flex items-center gap-4 text-center sm:text-left">
-          <div className="w-16 h-16 rounded-3xl bg-red-600 text-white flex items-center justify-center shadow-lg shrink-0">
-            <PhoneCall className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="text-xl sm:text-2xl font-black text-stone-900">
-              Need Priya Right Now?
-            </h3>
-            <p className="text-xs sm:text-sm text-stone-600 font-medium">
-              {isOffline ? 'Offline direct GSM cellular call' : 'Direct one-touch call to Priya’s mobile phone'}
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setSosModalOpen(true)}
-          className="w-full sm:w-auto py-4 px-8 bg-red-600 hover:bg-red-700 text-white font-black text-base sm:text-lg rounded-2xl shadow-lg transition active:scale-95"
-        >
-          Call Priya ({emergencyPhone})
-        </button>
-      </div>
-
-      {/* Emergency Modal */}
-      {sosModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white text-stone-900 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl animate-in zoom-in-95">
-            <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 mx-auto flex items-center justify-center">
-              <PhoneCall className="w-8 h-8 animate-bounce" />
-            </div>
-
-            {sosDialed ? (
-              <div className="space-y-3">
-                <div className="text-emerald-700 font-black text-lg">
-                  Calling Priya Directly...
-                </div>
-                <p className="text-xs text-stone-600 font-medium">
-                  Please stay seated comfortably. Priya is answering your call.
-                </p>
-                <button
-                  onClick={() => {
-                    setSosModalOpen(false);
-                    setSosDialed(false);
-                  }}
-                  className="w-full py-3 bg-stone-900 text-white font-bold text-sm rounded-2xl"
-                >
-                  Close
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <h3 className="font-black text-lg text-stone-900">
-                  Call Priya Now?
-                </h3>
-                <p className="text-xs text-stone-600 font-medium leading-relaxed">
-                  This will ring Priya's mobile phone directly so you can talk to her.
-                </p>
-
-                <div className="pt-2 space-y-2">
-                  <a
-                    href={`tel:${emergencyPhone.replace(/\s+/g, '')}`}
-                    onClick={handleTriggerOfflineSos}
-                    className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-black text-sm rounded-2xl shadow-md transition active:scale-95 flex items-center justify-center gap-2"
-                  >
-                    <PhoneCall className="w-5 h-5" />
-                    <span>Dial Priya ({emergencyPhone})</span>
-                  </a>
-
-                  <button
-                    onClick={() => setSosModalOpen(false)}
-                    className="w-full py-2.5 bg-sand-100 hover:bg-sand-200 text-stone-700 font-bold text-xs rounded-2xl transition"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* 6. Dedicated Safety Center (Specification 3, 4, 5, 6, 7, 34) */}
+      <section className="space-y-4">
+        <h2 className="text-2xl sm:text-3xl font-black text-stone-900 font-serif">
+          {t.safetyCenterTitle}
+        </h2>
+        <SafetyCenter />
+      </section>
 
     </div>
   );

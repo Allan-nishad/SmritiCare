@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   AppRole,
+  MobileTab,
+  DeviceFrameStyle,
   LanguageCode,
   RoutineItem,
   CognitiveSessionResult,
@@ -8,9 +10,18 @@ import {
   BaselineMetric,
   CaregiverAlert,
   PatientProfile,
+  EmergencyContact,
+  SosStep,
+  LocationCoordinates,
+  PlaceLocation,
+  NavigationStep,
+  SmartbandMetrics,
+  MusicTrack,
+  ProfileCompletionItem,
   SyncQueueItem,
   TelemetryLogItem,
-  RemotePushReminder
+  RemotePushReminder,
+  AlarmOverlayState
 } from '../types';
 import { sounds, speakText } from '../utils/audio';
 
@@ -24,6 +35,9 @@ interface AppContextType {
   toggleRoutine: (id: string) => void;
   snoozeRoutine: (id: string) => void;
   addRoutineItem: (item: Omit<RoutineItem, 'id' | 'completed'>) => void;
+  updateRoutinePriority: (id: string, priority: 'normal' | 'important' | 'critical') => void;
+  
+  // Cognitive Games & Sessions
   cognitiveSessions: CognitiveSessionResult[];
   recordCognitiveSession: (session: Omit<CognitiveSessionResult, 'id' | 'timestamp'>) => CognitiveSessionResult;
   familyMemories: FamilyMemberMemory[];
@@ -33,7 +47,41 @@ interface AppContextType {
   dismissAlert: (id: string) => void;
   markAlertAction: (id: string) => void;
   
-  // Offline Engine
+  // Alarm & Snooze Overlay System (Specification 8 & 9)
+  alarmOverlay: AlarmOverlayState | null;
+  triggerAlarm: (routineId?: string) => void;
+  dismissAlarm: (completed: boolean) => void;
+  snoozeAlarm: () => void;
+
+  // SOS 2-Contact Fallback System (Specification 3)
+  sosStep: SosStep;
+  emergencyContacts: EmergencyContact[];
+  startSosFlow: () => void;
+  resetSosFlow: () => void;
+  generatedSosSms: string | null;
+
+  // Location & Safety (Specification 4, 5, 6, 7, 32, 33, 34)
+  location: LocationCoordinates;
+  places: PlaceLocation[];
+  navigationSteps: NavigationStep[];
+  isMissingPatientScenario: boolean;
+  setIsMissingPatientScenario: (isMissing: boolean) => void;
+  smartbandMetrics: SmartbandMetrics;
+  toggleSmartbandConnection: () => void;
+
+  // Music Player System (Specification 23)
+  musicTracks: MusicTrack[];
+  currentTrackIndex: number;
+  isPlayingMusic: boolean;
+  togglePlayMusic: () => void;
+  nextTrack: () => void;
+  prevTrack: () => void;
+
+  // Profile Completion & Personalization (Specification 27)
+  profileCompletionItems: ProfileCompletionItem[];
+  profileCompletionPercentage: number;
+
+  // Offline Engine (Specification 31 & 32)
   isOffline: boolean;
   setIsOffline: (offline: boolean) => void;
   syncQueue: SyncQueueItem[];
@@ -41,35 +89,54 @@ interface AppContextType {
   lastSyncedTime: string;
   triggerSync: () => Promise<void>;
   
-  // Judge Demo Tour Mode
-  demoTourStep: number;
-  setDemoTourStep: (step: number) => void;
-  isDemoTourActive: boolean;
-  setIsDemoTourActive: (active: boolean) => void;
-  activeGameTab: 'memory_match' | 'pattern_sequence' | 'word_association';
-  setActiveGameTab: (tab: 'memory_match' | 'pattern_sequence' | 'word_association') => void;
+  // Voice Assistant & Tour
   isVoiceOpen: boolean;
   setIsVoiceOpen: (open: boolean) => void;
+  activeGameTab: 'memory_match' | 'pattern_sequence' | 'word_association' | 'shape_match' | 'mini_sudoku';
+  setActiveGameTab: (tab: 'memory_match' | 'pattern_sequence' | 'word_association' | 'shape_match' | 'mini_sudoku') => void;
+  activeSafetyTab: 'overview' | 'location' | 'sos' | 'take_me_home' | 'places';
+  setActiveSafetyTab: (tab: 'overview' | 'location' | 'sos' | 'take_me_home' | 'places') => void;
 
   // Mobile Prototype Mode
-  mobileTab: 'home' | 'games' | 'memories' | 'routine' | 'caregiver';
-  setMobileTab: (tab: 'home' | 'games' | 'memories' | 'routine' | 'caregiver') => void;
-  deviceFrame: 'iphone' | 'pixel' | 'fullscreen';
-  setDeviceFrame: (frame: 'iphone' | 'pixel' | 'fullscreen') => void;
+  mobileTab: MobileTab;
+  setMobileTab: (tab: MobileTab) => void;
+  deviceFrame: DeviceFrameStyle;
+  setDeviceFrame: (frame: DeviceFrameStyle) => void;
   mobileSubRole: 'patient' | 'caregiver';
   setMobileSubRole: (role: 'patient' | 'caregiver') => void;
 
-  // Dual Device Live Sync Mode
+  // Live Sync & Telemetry Logs
   telemetryLogs: TelemetryLogItem[];
   addTelemetryLog: (item: Omit<TelemetryLogItem, 'id' | 'timestamp'>) => void;
-  triggerSimulationEvent: (eventType: 'morning_med' | 'memory_game' | 'sos_help' | 'hydration') => void;
 
-  // Remote Push Voice Reminder (Priya -> Asha)
+  // Push Reminders (Priya -> Asha)
   activePushReminder: RemotePushReminder | null;
   sendPushReminder: (reminder: Omit<RemotePushReminder, 'id' | 'timestamp'>) => void;
   acknowledgePushReminder: (id: string) => void;
   dismissPushReminder: () => void;
   latestPushAcknowledgement: string | null;
+
+  // Tour & Simulation Aliases
+  demoTourStep: number;
+  setDemoTourStep: (step: number) => void;
+  isDemoTourActive: boolean;
+  setIsDemoTourActive: (active: boolean) => void;
+  triggerSimulationEvent: (eventType: 'morning_med' | 'memory_game' | 'sos_help' | 'hydration') => void;
+
+  // Evaluator Simulation Center Triggers (Specification 39)
+  triggerSimulation: (scenario: 
+    | 'alarm_medicine' 
+    | 'snooze_x3' 
+    | 'sos_fallback' 
+    | 'missing_patient' 
+    | 'take_me_home' 
+    | 'offline_toggle' 
+    | 'sync_reconcile' 
+    | 'game_adaptive_up' 
+    | 'smartband_pulse' 
+    | 'lang_assamese' 
+    | 'family_voice_push'
+  ) => void;
 }
 
 const initialPatient: PatientProfile = {
@@ -80,8 +147,138 @@ const initialPatient: PatientProfile = {
   caregiverName: "Priya",
   caregiverRelationship: "Family Caregiver / Daughter-in-law",
   recentBaselineSummary: "Engaged and responsive. Morning cognitive recall is 14% higher than afternoon sessions.",
-  lastActiveMinutesAgo: 4
+  lastActiveMinutesAgo: 4,
+  bloodGroup: "O+",
+  emergencyDoctor: "Dr. B. K. Barua (Cardiologist)"
 };
+
+const initialEmergencyContacts: EmergencyContact[] = [
+  {
+    id: 'c1',
+    name: 'Meera Devi',
+    relationship: 'Daughter (Teacher in Tezpur)',
+    phone: '+91 94350 12345',
+    photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300',
+    isPrimary: true,
+    voiceGender: 'female'
+  },
+  {
+    id: 'c2',
+    name: 'Rahul Sharma',
+    relationship: 'Son (Engineer in Guwahati)',
+    phone: '+91 98640 67890',
+    photoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=300',
+    isPrimary: false,
+    voiceGender: 'male'
+  }
+];
+
+const initialPlaces: PlaceLocation[] = [
+  {
+    id: 'p1',
+    name: 'Guwahati Residence (Home)',
+    category: 'home',
+    address: 'House 14, Rajgarh Road, Chandmari, Guwahati, Assam',
+    distanceKm: 0,
+    phone: '+91 94350 12345',
+    coordinates: { lat: 26.1834, lng: 91.7656 },
+    iconName: 'Home'
+  },
+  {
+    id: 'p2',
+    name: 'Dr. Barua Healthcare Clinic',
+    category: 'doctor',
+    address: 'Opposite Guwahati Club, G.S. Road, Guwahati',
+    distanceKm: 0.9,
+    phone: '+91 98640 11223',
+    coordinates: { lat: 26.1780, lng: 91.7580 },
+    iconName: 'Stethoscope'
+  },
+  {
+    id: 'p3',
+    name: 'Dispur Supercare Hospital',
+    category: 'hospital',
+    address: 'Ganeshguri Chariali, Dispur, Guwahati',
+    distanceKm: 2.8,
+    phone: '+91 361 2234567',
+    coordinates: { lat: 26.1445, lng: 91.7862 },
+    iconName: 'Building2'
+  },
+  {
+    id: 'p4',
+    name: 'Sanjivani Medicos (Pharmacy)',
+    category: 'pharmacy',
+    address: 'Silpukhuri Main Market, Guwahati',
+    distanceKm: 0.6,
+    phone: '+91 98640 99887',
+    coordinates: { lat: 26.1890, lng: 91.7710 },
+    iconName: 'Pill'
+  },
+  {
+    id: 'p5',
+    name: 'Meera’s House (Tezpur)',
+    category: 'family',
+    address: 'Mission Chariali, Tezpur, Sonitpur, Assam',
+    distanceKm: 175,
+    phone: '+91 94350 12345',
+    coordinates: { lat: 26.6338, lng: 92.7926 },
+    iconName: 'Heart'
+  }
+];
+
+const initialNavigationSteps: NavigationStep[] = [
+  {
+    instruction: "Walk straight along R.G. Baruah Road towards Chandmari",
+    distanceMeters: 400,
+    icon: 'straight',
+    voicePrompt: "Asha, walk straight along this shaded footpath for 400 meters."
+  },
+  {
+    instruction: "Turn right at the Tea Stall corner into Rajgarh By-lane 3",
+    distanceMeters: 250,
+    icon: 'turn-right',
+    voicePrompt: "Turn right near the tea stall into your familiar home lane."
+  },
+  {
+    instruction: "Walk 150 meters to Green Gate House #14",
+    distanceMeters: 150,
+    icon: 'straight',
+    voicePrompt: "Your home with the green gate is just ahead on the left."
+  },
+  {
+    instruction: "Arrived safely at Home. Priya is waiting on the veranda.",
+    distanceMeters: 0,
+    icon: 'destination',
+    voicePrompt: "You have arrived home safely, Asha!"
+  }
+];
+
+const initialMusicTracks: MusicTrack[] = [
+  {
+    id: 't1',
+    title: 'Borxunor Gaan (Veranda Rain Flute)',
+    artist: 'Traditional Assam Folk Synth',
+    category: 'flute',
+    duration: '3:45',
+    notes: 'Peaceful morning flute evoking Jorhat tea garden breeze'
+  },
+  {
+    id: 't2',
+    title: 'Brahmaputra Serenade',
+    artist: 'Gentle River Chords',
+    category: 'river_ambient',
+    duration: '4:10',
+    notes: 'Soothing water flow harmonics for calm relaxation'
+  },
+  {
+    id: 't3',
+    title: 'Magh Bihu Folk Memory',
+    artist: 'Cultural Reminiscence Melody',
+    category: 'bihu',
+    duration: '3:20',
+    notes: 'Joyful nostalgic notes of Bihu festival'
+  }
+];
 
 const initialRoutines: RoutineItem[] = [
   {
@@ -92,9 +289,9 @@ const initialRoutines: RoutineItem[] = [
     category: 'medicine',
     completed: true,
     completedAt: '08:42 AM',
-    priority: 'high',
+    priority: 'critical',
     icon: 'Pill',
-    dosageOrNotes: 'With light breakfast'
+    dosageOrNotes: 'Take with light breakfast'
   },
   {
     id: 'r2',
@@ -103,7 +300,7 @@ const initialRoutines: RoutineItem[] = [
     subtitle: 'SmritiCare Culturally Familiar Match session',
     category: 'activity',
     completed: false,
-    priority: 'high',
+    priority: 'important',
     icon: 'Brain',
     dosageOrNotes: '5-8 mins gentle recall'
   },
@@ -131,25 +328,26 @@ const initialRoutines: RoutineItem[] = [
   },
   {
     id: 'r5',
-    time: '04:30 PM',
-    title: 'Veranda Walk & Garden Flowers',
+    time: '04:00 PM',
+    title: 'Appointment: Dr. Barua Consultation',
+    subtitle: 'Routine blood pressure review & checkup',
+    category: 'appointment',
+    completed: false,
+    priority: 'critical',
+    icon: 'Calendar',
+    doctorName: 'Dr. B. K. Barua',
+    locationName: 'Guwahati Club Clinic'
+  },
+  {
+    id: 'r6',
+    time: '05:30 PM',
+    title: 'Veranda Walk & Marigold Flowers',
     subtitle: '10-minute stroll in the courtyard garden',
     category: 'walk',
     completed: false,
     priority: 'normal',
     icon: 'Footprints',
     dosageOrNotes: 'Gentle mobility exercise'
-  },
-  {
-    id: 'r6',
-    time: '06:00 PM',
-    title: 'Family Call with Meera & Aarav',
-    subtitle: 'Video call with daughter Meera in Tezpur',
-    category: 'family',
-    completed: false,
-    priority: 'normal',
-    icon: 'PhoneCall',
-    dosageOrNotes: 'Reminiscence and family bonding'
   }
 ];
 
@@ -161,22 +359,24 @@ const initialMemories: FamilyMemberMemory[] = [
     location: 'Tezpur, Assam',
     photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600',
     audioNoteText: '“Ma, remember when we used to make Narikol Laru together for Magh Bihu in Jorhat? I will visit you this Sunday!”',
-    storySnippet: 'Meera is your eldest daughter. She loves tea garden walks and teaches high school mathematics.',
+    storySnippet: 'Meera is your eldest daughter. She loves tea garden walks and teaches high school mathematics in Tezpur.',
     favoriteMemory: 'Making sweet coconut laru together during Magh Bihu festival in Jorhat.',
     keyYear: '2023 Festival',
-    familiarObject: 'Traditional brass bowl (Kahi Bati)'
+    familiarObject: 'Traditional brass bowl (Kahi Bati)',
+    voiceGender: 'female'
   },
   {
     id: 'm2',
-    name: 'Ravi',
+    name: 'Rahul',
     relationship: 'Son (Engineer in Guwahati)',
     location: 'Guwahati, Assam',
     photoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600',
     audioNoteText: '“Ma, I brought you the fresh red tea leaves from Doomdooma. Let’s sit together on the veranda.”',
-    storySnippet: 'Ravi lives 10 minutes away and visits you every evening with Priya and little Aarav.',
+    storySnippet: 'Rahul lives 10 minutes away and visits you every evening with Priya and little Aarav.',
     favoriteMemory: 'Planting marigolds and orchids in the front garden.',
     keyYear: '1998 & Current',
-    familiarObject: 'Assam Tea Pot (Kettle)'
+    familiarObject: 'Assam Tea Pot (Kettle)',
+    voiceGender: 'male'
   },
   {
     id: 'm3',
@@ -184,11 +384,12 @@ const initialMemories: FamilyMemberMemory[] = [
     relationship: 'Grandson (Age 8)',
     location: 'Guwahati, Assam',
     photoUrl: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&q=80&w=600',
-    audioNoteText: '“Aita (Grandma), tell me the story of the Kaziranga Rhinoceros and the wise river river dolphin again!”',
+    audioNoteText: '“Aita (Grandma), tell me the story of the Kaziranga Rhinoceros and the wise river dolphin again!”',
     storySnippet: 'Aarav loves reading folklore stories with you in the afternoon sunshine.',
     favoriteMemory: 'Drawing the Brahmaputra ferry boat together.',
     keyYear: 'Present Day',
-    familiarObject: 'Wooden Rhino Toy'
+    familiarObject: 'Wooden Rhino Toy',
+    voiceGender: 'female'
   },
   {
     id: 'm4',
@@ -200,7 +401,8 @@ const initialMemories: FamilyMemberMemory[] = [
     storySnippet: 'Where you lived with your husband Dr. Barua for 38 years surrounded by lush areca palms.',
     favoriteMemory: 'Listening to Bhupen Hazarika songs while morning tea was brewing.',
     keyYear: '1975 - 2013',
-    familiarObject: 'Eri Silk Shawl (Gamosa)'
+    familiarObject: 'Eri Silk Shawl (Gamosa)',
+    voiceGender: 'female'
   }
 ];
 
@@ -213,13 +415,13 @@ const initialSessions: CognitiveSessionResult[] = [
     durationSeconds: 140,
     totalAttempts: 12,
     accuracyPercentage: 68,
-    difficulty: 'easy',
+    difficulty: 'level_1',
     responseAverageSeconds: 13.2,
     hintsUsed: 3,
     adaptiveDecision: {
       ruleApplied: 'Baseline Calibration (Day 1)',
       explanation: 'Established initial baseline response time and pair association speed.',
-      nextRecommendedDifficulty: 'easy',
+      nextRecommendedDifficulty: 'level_1',
       nextGameType: 'memory_match'
     }
   },
@@ -231,13 +433,13 @@ const initialSessions: CognitiveSessionResult[] = [
     durationSeconds: 124,
     totalAttempts: 10,
     accuracyPercentage: 71,
-    difficulty: 'easy',
+    difficulty: 'level_1',
     responseAverageSeconds: 12.1,
     hintsUsed: 2,
     adaptiveDecision: {
       ruleApplied: 'Gentle Repetition Confirmation',
       explanation: 'Response time improved by 8%. Kept difficulty steady to build confidence.',
-      nextRecommendedDifficulty: 'easy',
+      nextRecommendedDifficulty: 'level_1',
       nextGameType: 'pattern_sequence'
     }
   },
@@ -249,13 +451,13 @@ const initialSessions: CognitiveSessionResult[] = [
     durationSeconds: 110,
     totalAttempts: 8,
     accuracyPercentage: 70,
-    difficulty: 'easy',
+    difficulty: 'level_2',
     responseAverageSeconds: 12.0,
     hintsUsed: 2,
     adaptiveDecision: {
       ruleApplied: 'Multi-modal Consistency Rule',
       explanation: 'Stable sequence recall maintained across visual icon patterns.',
-      nextRecommendedDifficulty: 'easy',
+      nextRecommendedDifficulty: 'level_2',
       nextGameType: 'word_association'
     }
   },
@@ -267,50 +469,50 @@ const initialSessions: CognitiveSessionResult[] = [
     durationSeconds: 98,
     totalAttempts: 7,
     accuracyPercentage: 74,
-    difficulty: 'easy',
+    difficulty: 'level_2',
     responseAverageSeconds: 11.2,
     hintsUsed: 1,
     adaptiveDecision: {
       ruleApplied: 'Positive Confidence Advance',
       explanation: 'High semantic association accuracy. Smooth transition to 6-item pairs.',
-      nextRecommendedDifficulty: 'medium',
-      nextGameType: 'memory_match'
+      nextRecommendedDifficulty: 'level_2',
+      nextGameType: 'shape_match'
     }
   },
   {
     id: 'cs-5',
-    gameType: 'memory_match',
-    gameTitle: 'Familiar Memory Match',
+    gameType: 'shape_match',
+    gameTitle: 'Soothing Shape Match',
     timestamp: '3 days ago',
     durationSeconds: 90,
     totalAttempts: 7,
     accuracyPercentage: 78,
-    difficulty: 'medium',
+    difficulty: 'level_2',
     responseAverageSeconds: 10.4,
     hintsUsed: 1,
     adaptiveDecision: {
       ruleApplied: 'Medium Tier Stabilization',
-      explanation: 'Handled medium difficulty seamlessly without fatigue signals.',
-      nextRecommendedDifficulty: 'medium',
-      nextGameType: 'pattern_sequence'
+      explanation: 'Handled shape categories seamlessly without fatigue signals.',
+      nextRecommendedDifficulty: 'level_3',
+      nextGameType: 'memory_match'
     }
   },
   {
     id: 'cs-6',
-    gameType: 'pattern_sequence',
-    gameTitle: 'Daily Rhythm Pattern',
+    gameType: 'memory_match',
+    gameTitle: 'Familiar Memory Match',
     timestamp: '2 days ago',
     durationSeconds: 84,
     totalAttempts: 6,
     accuracyPercentage: 80,
-    difficulty: 'medium',
+    difficulty: 'level_3',
     responseAverageSeconds: 9.8,
     hintsUsed: 1,
     adaptiveDecision: {
       ruleApplied: 'Peak Engagement Trend',
       explanation: 'Prompt recognition with under 10s average response time.',
-      nextRecommendedDifficulty: 'medium',
-      nextGameType: 'memory_match'
+      nextRecommendedDifficulty: 'level_3',
+      nextGameType: 'mini_sudoku'
     }
   },
   {
@@ -321,13 +523,13 @@ const initialSessions: CognitiveSessionResult[] = [
     durationSeconds: 76,
     totalAttempts: 6,
     accuracyPercentage: 84,
-    difficulty: 'medium',
+    difficulty: 'level_3',
     responseAverageSeconds: 9.1,
     hintsUsed: 0,
     adaptiveDecision: {
       ruleApplied: 'N-of-1 Personal Optimal Zone',
-      explanation: 'Asha scored her personal best (84%). System will introduce subtle 8-pair challenges when she is well-rested.',
-      nextRecommendedDifficulty: 'medium',
+      explanation: 'Asha scored her personal best (84%). System adapts smoothly to 8-card sets when well-rested.',
+      nextRecommendedDifficulty: 'level_3',
       nextGameType: 'memory_match'
     }
   }
@@ -336,7 +538,7 @@ const initialSessions: CognitiveSessionResult[] = [
 const initialAlerts: CaregiverAlert[] = [
   {
     id: 'a1',
-    timestamp: 'Today at 09:15 AM',
+    timestamp: 'Today at 08:42 AM',
     type: 'routine',
     title: 'Morning Medicine Taken Peacefully',
     description: 'Asha confirmed her blood pressure medication at 08:42 AM with warm water.',
@@ -358,90 +560,148 @@ const initialAlerts: CaregiverAlert[] = [
   }
 ];
 
-const initialTelemetry: TelemetryLogItem[] = [
-  {
-    id: 'tel-1',
-    timestamp: '08:42 AM',
-    source: 'patient',
-    title: 'Morning Blood Pressure Med Confirmed',
-    detail: 'Asha marked routine completed on device. Synchronized to Priya\'s hub.',
-    type: 'routine'
-  },
-  {
-    id: 'tel-2',
-    timestamp: '09:15 AM',
-    source: 'ai_engine',
-    title: 'Personal Baseline Synchronized',
-    detail: 'Asha vs Asha 7-day recall curve updated (84% score, 9.1s avg pace).',
-    type: 'sync'
-  },
-  {
-    id: 'tel-3',
-    timestamp: '10:00 AM',
-    source: 'caregiver',
-    title: 'Caregiver Live Telemetry Connected',
-    detail: 'Dual device remote synchronization active with zero latency.',
-    type: 'insight'
-  }
+const initialProfileCompletion: ProfileCompletionItem[] = [
+  { id: 'pc1', label: 'Patient Basic Info & Age (72)', completed: true, category: 'medical' },
+  { id: 'pc2', label: 'Primary Emergency Contact (Meera Devi)', completed: true, category: 'emergency' },
+  { id: 'pc3', label: 'Secondary Fallback Contact (Rahul Sharma)', completed: true, category: 'emergency' },
+  { id: 'pc4', label: 'Home Geofence & Important Places Configured', completed: true, category: 'preferences' },
+  { id: 'pc5', label: '4 Personalized Family Reminiscence Memories Added', completed: true, category: 'memory' },
+  { id: 'pc6', label: 'Medication Schedule & Dosage Configured', completed: true, category: 'medical' },
+  { id: 'pc7', label: 'Assamese Regional Voice Profile Linked', completed: true, category: 'preferences' },
+  { id: 'pc8', label: 'Upcoming Cardiology Appointment Added', completed: true, category: 'medical' },
+  { id: 'pc9', label: 'Additional Family Photos Uploaded for Match Game', completed: false, category: 'memory' },
+  { id: 'pc10', label: 'Smartband Bluetooth Wearable Pairing Verified', completed: false, category: 'preferences' }
 ];
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // Shared BroadcastChannel for real-time cross-tab and cross-device communication
 const syncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
-  ? new BroadcastChannel('smriticare_live_sync_v1')
+  ? new BroadcastChannel('smriticare_live_sync_v2')
   : null;
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [role, setRole] = useState<AppRole>('landing');
   const [language, setLanguage] = useState<LanguageCode>('en');
   const [patient] = useState<PatientProfile>(initialPatient);
+  
   const [routines, setRoutines] = useState<RoutineItem[]>(() => {
-    const saved = localStorage.getItem('smriticare_routines');
+    const saved = localStorage.getItem('smriticare_routines_v2');
     return saved ? JSON.parse(saved) : initialRoutines;
   });
+
   const [cognitiveSessions, setCognitiveSessions] = useState<CognitiveSessionResult[]>(() => {
-    const saved = localStorage.getItem('smriticare_sessions');
+    const saved = localStorage.getItem('smriticare_sessions_v2');
     return saved ? JSON.parse(saved) : initialSessions;
   });
+
   const [familyMemories, setFamilyMemories] = useState<FamilyMemberMemory[]>(() => {
-    const saved = localStorage.getItem('smriticare_memories');
+    const saved = localStorage.getItem('smriticare_memories_v2');
     return saved ? JSON.parse(saved) : initialMemories;
   });
+
   const [caregiverAlerts, setCaregiverAlerts] = useState<CaregiverAlert[]>(() => {
-    const saved = localStorage.getItem('smriticare_alerts');
+    const saved = localStorage.getItem('smriticare_alerts_v2');
     return saved ? JSON.parse(saved) : initialAlerts;
   });
 
-  // Telemetry Log State for Dual Device & Real-time inspection
-  const [telemetryLogs, setTelemetryLogs] = useState<TelemetryLogItem[]>(() => {
-    const saved = localStorage.getItem('smriticare_telemetry');
-    return saved ? JSON.parse(saved) : initialTelemetry;
+  const [profileCompletionItems, setProfileCompletionItems] = useState<ProfileCompletionItem[]>(() => {
+    const saved = localStorage.getItem('smriticare_profile_comp');
+    return saved ? JSON.parse(saved) : initialProfileCompletion;
   });
 
-  // Remote Push Voice Reminder State (Priya -> Asha)
-  const [activePushReminder, setActivePushReminder] = useState<RemotePushReminder | null>(null);
-  const [latestPushAcknowledgement, setLatestPushAcknowledgement] = useState<string | null>(null);
+  // Alarm & Snooze Overlay System
+  const [alarmOverlay, setAlarmOverlay] = useState<AlarmOverlayState | null>(null);
+
+  // SOS Fallback System
+  const [sosStep, setSosStep] = useState<SosStep>('idle');
+  const [emergencyContacts] = useState<EmergencyContact[]>(initialEmergencyContacts);
+  const [generatedSosSms, setGeneratedSosSms] = useState<string | null>(null);
+
+  // Location & Safety State
+  const [location, setLocation] = useState<LocationCoordinates>({
+    lat: 26.1834,
+    lng: 91.7656,
+    address: "House 14, Rajgarh Road, Chandmari, Guwahati",
+    areaName: "Chandmari Home Area",
+    isHome: true,
+    distanceFromHomeKm: 0,
+    lastUpdated: "Just now",
+    isLive: true
+  });
+  const [places] = useState<PlaceLocation[]>(initialPlaces);
+  const [navigationSteps] = useState<NavigationStep[]>(initialNavigationSteps);
+  const [isMissingPatientScenario, setIsMissingPatientScenario] = useState<boolean>(false);
+
+  // Smartband Wearable Telemetry
+  const [smartbandMetrics, setSmartbandMetrics] = useState<SmartbandMetrics>({
+    connected: true,
+    deviceName: "SmritiCare GPS Band v2",
+    batteryLevel: 88,
+    lastSyncTime: "2 mins ago",
+    stepsToday: 3420,
+    heartRateBpm: 74,
+    sleepHours: 7.5,
+    activityLevel: 'Light Walking'
+  });
+
+  // Background Music Player
+  const [musicTracks] = useState<MusicTrack[]>(initialMusicTracks);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0);
+  const [isPlayingMusic, setIsPlayingMusic] = useState<boolean>(false);
 
   // Offline Sync State
   const [isOffline, setIsOffline] = useState<boolean>(false);
   const [syncQueue, setSyncQueue] = useState<SyncQueueItem[]>(() => {
-    const saved = localStorage.getItem('smriticare_sync_queue');
+    const saved = localStorage.getItem('smriticare_sync_queue_v2');
     return saved ? JSON.parse(saved) : [];
   });
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncedTime, setLastSyncedTime] = useState<string>('Just now');
 
-  // Interactive Judge Demo Tour state
+  // Tour state
   const [demoTourStep, setDemoTourStep] = useState<number>(0);
   const [isDemoTourActive, setIsDemoTourActive] = useState<boolean>(false);
-  const [activeGameTab, setActiveGameTab] = useState<'memory_match' | 'pattern_sequence' | 'word_association'>('memory_match');
-  const [isVoiceOpen, setIsVoiceOpen] = useState<boolean>(false);
 
-  // Mobile Prototype Mode state
-  const [mobileTab, setMobileTab] = useState<'home' | 'games' | 'memories' | 'routine' | 'caregiver'>('home');
-  const [deviceFrame, setDeviceFrame] = useState<'iphone' | 'pixel' | 'fullscreen'>('iphone');
+  // UI Tabs & Views
+  const [isVoiceOpen, setIsVoiceOpen] = useState<boolean>(false);
+  const [activeGameTab, setActiveGameTab] = useState<'memory_match' | 'pattern_sequence' | 'word_association' | 'shape_match' | 'mini_sudoku'>('memory_match');
+  const [activeSafetyTab, setActiveSafetyTab] = useState<'overview' | 'location' | 'sos' | 'take_me_home' | 'places'>('overview');
+  const [mobileTab, setMobileTab] = useState<MobileTab>('home');
+  const [deviceFrame, setDeviceFrame] = useState<DeviceFrameStyle>('iphone');
   const [mobileSubRole, setMobileSubRole] = useState<'patient' | 'caregiver'>('patient');
+
+  // Telemetry Logs for Real-time inspection
+  const [telemetryLogs, setTelemetryLogs] = useState<TelemetryLogItem[]>([
+    {
+      id: 'tel-1',
+      timestamp: '08:42 AM',
+      source: 'patient',
+      title: 'Morning Medicine Confirmed',
+      detail: 'Asha took Telmisartan (40mg). Synchronized to Priya\'s hub.',
+      type: 'routine'
+    },
+    {
+      id: 'tel-2',
+      timestamp: '09:15 AM',
+      source: 'ai_engine',
+      title: 'Personal Baseline Synchronized',
+      detail: 'Asha vs Asha 7-day recall curve updated (84% score, 9.1s avg pace).',
+      type: 'sync'
+    },
+    {
+      id: 'tel-3',
+      timestamp: '10:00 AM',
+      source: 'caregiver',
+      title: 'Caregiver Live Telemetry Connected',
+      detail: 'GPS Geofence active. Asha is at Guwahati Residence.',
+      type: 'location'
+    }
+  ]);
+
+  // Remote Push Voice Reminder State (Priya -> Asha)
+  const [activePushReminder, setActivePushReminder] = useState<RemotePushReminder | null>(null);
+  const [latestPushAcknowledgement, setLatestPushAcknowledgement] = useState<string | null>(null);
 
   // Broadcast & Cross-tab message listener
   useEffect(() => {
@@ -458,58 +718,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else if (type === 'ALERT_UPDATE' && payload?.alerts) {
         setCaregiverAlerts(payload.alerts);
       } else if (type === 'TELEMETRY_ITEM' && payload?.log) {
-        setTelemetryLogs(prev => [payload.log, ...prev.slice(0, 19)]);
-      } else if (type === 'REMOTE_PUSH_REMINDER' && payload?.reminder) {
-        setActivePushReminder(payload.reminder);
-        sounds.playSuccess();
-        speakText(payload.reminder.voiceNoteText || payload.reminder.text, language);
-      } else if (type === 'REMOTE_PUSH_ACKNOWLEDGED' && payload) {
-        setLatestPushAcknowledgement(payload.message || 'Asha confirmed routine with love!');
-        sounds.playSuccess();
-        setTimeout(() => setLatestPushAcknowledgement(null), 5000);
-      } else if (type === 'REMOTE_PUSH_DISMISSED') {
-        setActivePushReminder(null);
+        setTelemetryLogs(prev => [payload.log, ...prev.slice(0, 24)]);
+      } else if (type === 'ALARM_TRIGGER' && payload?.alarm) {
+        setAlarmOverlay(payload.alarm);
+        sounds.playAlarm();
+      } else if (type === 'LOCATION_UPDATE' && payload?.location) {
+        setLocation(payload.location);
       }
     };
 
     syncChannel.addEventListener('message', handleBroadcast);
     return () => syncChannel.removeEventListener('message', handleBroadcast);
-  }, [language]);
-
-  // URL Hash & Query listener for direct sub demo links
-  useEffect(() => {
-    const handleUrlChange = () => {
-      const hash = window.location.hash.toLowerCase();
-      const params = new URLSearchParams(window.location.search);
-      const demoParam = params.get('demo') || params.get('view') || params.get('role');
-
-      if (hash === '#dual' || hash === '#dual-device' || demoParam === 'dual' || demoParam === 'dual-device') {
-        setRole('dual');
-      } else if (hash === '#mobile-patient' || hash === '#patient-phone' || demoParam === 'patient-phone') {
-        setRole('mobile');
-        setMobileSubRole('patient');
-        setMobileTab('home');
-      } else if (hash === '#mobile-caregiver' || hash === '#caregiver-phone' || demoParam === 'caregiver-phone') {
-        setRole('mobile');
-        setMobileSubRole('caregiver');
-        setMobileTab('caregiver');
-      } else if (hash === '#mobile' || hash === '#app' || demoParam === 'mobile' || demoParam === 'app') {
-        setRole('mobile');
-      } else if (hash === '#patient' || demoParam === 'patient') {
-        setRole('patient');
-      } else if (hash === '#caregiver' || demoParam === 'caregiver') {
-        setRole('caregiver');
-      } else if (hash === '#landing' || hash === '#overview' || demoParam === 'landing' || demoParam === 'overview') {
-        setRole('landing');
-      }
-    };
-
-    handleUrlChange();
-    window.addEventListener('hashchange', handleUrlChange);
-    return () => window.removeEventListener('hashchange', handleUrlChange);
   }, []);
 
-  // Helper to add telemetry log & broadcast
+  // Sync to local storage
+  useEffect(() => {
+    localStorage.setItem('smriticare_routines_v2', JSON.stringify(routines));
+  }, [routines]);
+
+  useEffect(() => {
+    localStorage.setItem('smriticare_sessions_v2', JSON.stringify(cognitiveSessions));
+  }, [cognitiveSessions]);
+
+  useEffect(() => {
+    localStorage.setItem('smriticare_memories_v2', JSON.stringify(familyMemories));
+  }, [familyMemories]);
+
+  useEffect(() => {
+    localStorage.setItem('smriticare_alerts_v2', JSON.stringify(caregiverAlerts));
+  }, [caregiverAlerts]);
+
+  useEffect(() => {
+    localStorage.setItem('smriticare_sync_queue_v2', JSON.stringify(syncQueue));
+  }, [syncQueue]);
+
   const addTelemetryLog = (item: Omit<TelemetryLogItem, 'id' | 'timestamp'>) => {
     const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const fullItem: TelemetryLogItem = {
@@ -517,46 +759,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: 'tel-' + Date.now(),
       timestamp: nowStr
     };
-    setTelemetryLogs(prev => [fullItem, ...prev.slice(0, 19)]);
+    setTelemetryLogs(prev => [fullItem, ...prev.slice(0, 24)]);
     syncChannel?.postMessage({ type: 'TELEMETRY_ITEM', payload: { log: fullItem } });
   };
-
-  // Update URL hash smoothly when role changes
-  const handleSetRole = (newRole: AppRole) => {
-    setRole(newRole);
-    if (newRole === 'dual') {
-      window.location.hash = '#dual';
-    } else if (newRole === 'mobile') {
-      window.location.hash = '#mobile';
-    } else if (newRole === 'patient') {
-      window.location.hash = '#patient';
-    } else if (newRole === 'caregiver') {
-      window.location.hash = '#caregiver';
-    } else {
-      window.location.hash = '#overview';
-    }
-  };
-
-  // Sync back to local storage
-  useEffect(() => {
-    localStorage.setItem('smriticare_routines', JSON.stringify(routines));
-  }, [routines]);
-
-  useEffect(() => {
-    localStorage.setItem('smriticare_sessions', JSON.stringify(cognitiveSessions));
-  }, [cognitiveSessions]);
-
-  useEffect(() => {
-    localStorage.setItem('smriticare_memories', JSON.stringify(familyMemories));
-  }, [familyMemories]);
-
-  useEffect(() => {
-    localStorage.setItem('smriticare_alerts', JSON.stringify(caregiverAlerts));
-  }, [caregiverAlerts]);
-
-  useEffect(() => {
-    localStorage.setItem('smriticare_sync_queue', JSON.stringify(syncQueue));
-  }, [syncQueue]);
 
   // Routine toggling
   const toggleRoutine = (id: string) => {
@@ -566,7 +771,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const nextCompleted = !item.completed;
           const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           
-          // If offline, push to sync queue
           if (isOffline) {
             const queueItem: SyncQueueItem = {
               id: 'sync-r-' + Date.now(),
@@ -578,7 +782,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setSyncQueue(q => [queueItem, ...q]);
           }
 
-          // Add Telemetry Log
           addTelemetryLog({
             source: 'patient',
             title: `Routine ${nextCompleted ? 'Completed' : 'Reopened'}`,
@@ -596,7 +799,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return item;
       });
 
-      // Broadcast to other tabs/windows
       syncChannel?.postMessage({ type: 'ROUTINE_UPDATE', payload: { routines: nextRoutines } });
       return nextRoutines;
     });
@@ -606,13 +808,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setRoutines(prev => {
       const nextRoutines = prev.map(item => {
         if (item.id === id) {
+          const nextSnoozeCount = (item.snoozeCount || 0) + 1;
           addTelemetryLog({
             source: 'patient',
-            title: 'Routine Snoozed (15m)',
-            detail: `Asha requested gentle reminder for "${item.title}".`,
-            type: 'routine'
+            title: `Routine Snoozed (${nextSnoozeCount}x)`,
+            detail: `Asha snoozed "${item.title}" (10 mins).`,
+            type: 'alarm'
           });
-          return { ...item, snoozed: true };
+
+          // If snoozed 3 times, generate caregiver alert
+          if (nextSnoozeCount >= 3) {
+            const snoozeAlert: CaregiverAlert = {
+              id: 'snooze-alert-' + Date.now(),
+              timestamp: 'Just now',
+              type: 'snooze_warning',
+              title: `Important Reminder Repeatedly Snoozed (${item.title})`,
+              description: `Asha has snoozed her ${item.title} 3 times. Please consider checking in with her warmly.`,
+              whatChanged: `Reminder was snoozed 3 consecutive times past schedule.`,
+              significance: 'High Priority',
+              suggestedAction: 'Call Asha or step in with a comforting drink.',
+              dismissed: false
+            };
+            setCaregiverAlerts(alerts => [snoozeAlert, ...alerts]);
+          }
+
+          return { ...item, snoozed: true, snoozeCount: nextSnoozeCount };
         }
         return item;
       });
@@ -635,9 +855,174 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addTelemetryLog({
       source: 'caregiver',
       title: 'New Routine Scheduled',
-      detail: `Priya added "${item.title}" at ${item.time}`,
+      detail: `Priya scheduled "${item.title}" at ${item.time} (${item.priority.toUpperCase()})`,
       type: 'routine'
     });
+  };
+
+  const updateRoutinePriority = (id: string, priority: 'normal' | 'important' | 'critical') => {
+    setRoutines(prev => prev.map(r => r.id === id ? { ...r, priority } : r));
+  };
+
+  // Alarm Overlay Management
+  const triggerAlarm = (routineId?: string) => {
+    const target = routineId ? routines.find(r => r.id === routineId) : (routines.find(r => !r.completed) || routines[0]);
+    if (!target) return;
+
+    const alarmState: AlarmOverlayState = {
+      isOpen: true,
+      routineId: target.id,
+      title: target.title,
+      subtitle: target.subtitle,
+      category: target.category as any,
+      time: target.time,
+      snoozeCount: target.snoozeCount || 0,
+      priority: target.priority,
+      callerName: target.category === 'medicine' ? 'Meera (Daughter)' : 'Priya (Caregiver)'
+    };
+
+    setAlarmOverlay(alarmState);
+    sounds.playAlarm();
+    syncChannel?.postMessage({ type: 'ALARM_TRIGGER', payload: { alarm: alarmState } });
+
+    // Voice announcement in selected language
+    const speechText = language === 'as'
+      ? `আশা দেৱী, আপোনাৰ ${target.title}ৰ সময় হৈছে।`
+      : language === 'hi'
+      ? `आशा जी, आपकी ${target.title} का समय हो गया है।`
+      : `Asha, it is time for your ${target.title}.`;
+    speakText(speechText, language);
+
+    addTelemetryLog({
+      source: 'ai_engine',
+      title: 'Prominent Alarm Triggered',
+      detail: `Overlay interrupted device for "${target.title}" at ${target.time}.`,
+      type: 'alarm'
+    });
+  };
+
+  const dismissAlarm = (completed: boolean) => {
+    if (alarmOverlay && completed) {
+      toggleRoutine(alarmOverlay.routineId);
+      sounds.playSuccess();
+    }
+    setAlarmOverlay(null);
+  };
+
+  const snoozeAlarm = () => {
+    if (!alarmOverlay) return;
+    snoozeRoutine(alarmOverlay.routineId);
+    setAlarmOverlay(null);
+    sounds.playTone(440, 'sine', 0.3, 0.15);
+  };
+
+  // SOS 2-Contact Fallback State Machine
+  const startSosFlow = () => {
+    setSosStep('calling_meera');
+    sounds.playPhoneRing();
+
+    addTelemetryLog({
+      source: 'patient',
+      title: 'Emergency SOS Triggered',
+      detail: 'Calling Contact 1 (Meera Devi - Daughter)...',
+      type: 'sos'
+    });
+
+    // Speak initial call attempt
+    const msg1 = language === 'as'
+      ? "মীৰালৈ ফোন কৰা হৈছে..."
+      : language === 'hi'
+      ? "मीरा को कॉल किया जा रहा है..."
+      : "Calling Meera Devi (Daughter)...";
+    speakText(msg1, language);
+
+    // After 3.5 seconds: Meera does not answer -> Fallback to Rahul
+    setTimeout(() => {
+      setSosStep('meera_failed');
+      setTimeout(() => {
+        setSosStep('calling_rahul');
+        sounds.playPhoneRing();
+
+        const msg2 = language === 'as'
+          ? "মীৰাই সঁহাৰি নিদিলে। ৰাহুললৈ ফোন কৰা হৈছে..."
+          : language === 'hi'
+          ? "मीरा का उत्तर नहीं मिला। राहुल को कॉल किया जा रहा है..."
+          : "No response from Meera. Automatically trying Rahul Sharma (Son)...";
+        speakText(msg2, language);
+
+        // After another 3.5 seconds: Rahul Answers & SMS is generated
+        setTimeout(() => {
+          setSosStep('connected_rahul');
+          sounds.playSuccess();
+
+          const locText = location.isHome ? "Guwahati Residence (Rajgarh Road)" : "Outside Home Area (1.8 km Away, G.S. Road)";
+          const smsText = `EMERGENCY ALERT: Asha triggered SOS from ${locText}. Battery: ${smartbandMetrics.batteryLevel}%. Please check immediately.`;
+          setGeneratedSosSms(smsText);
+
+          // Alert to Caregiver
+          const sosAlert: CaregiverAlert = {
+            id: 'sos-alert-' + Date.now(),
+            timestamp: 'Just now',
+            type: 'sos',
+            title: 'EMERGENCY SOS ALERT: Asha Connected with Rahul',
+            description: `Asha triggered SOS. Contact 1 (Meera) unavailable; Contact 2 (Rahul) connected successfully. SMS broadcast sent.`,
+            whatChanged: `Emergency fallback flow completed. Location: ${locText}.`,
+            significance: 'High Priority',
+            suggestedAction: 'Coordinate with Rahul immediately.',
+            dismissed: false
+          };
+          setCaregiverAlerts(alerts => [sosAlert, ...alerts]);
+
+          addTelemetryLog({
+            source: 'patient',
+            title: 'SOS Fallback Connected to Rahul',
+            detail: `Location SMS dispatched: "${smsText}"`,
+            type: 'sos'
+          });
+        }, 3500);
+      }, 1500);
+    }, 3500);
+  };
+
+  const resetSosFlow = () => {
+    setSosStep('idle');
+    setGeneratedSosSms(null);
+  };
+
+  // Background Music Controller
+  const togglePlayMusic = () => {
+    if (isPlayingMusic) {
+      sounds.stopBackgroundMusic();
+      setIsPlayingMusic(false);
+    } else {
+      const track = musicTracks[currentTrackIndex];
+      sounds.startBackgroundMusic(track.category);
+      setIsPlayingMusic(true);
+    }
+  };
+
+  const nextTrack = () => {
+    const nextIdx = (currentTrackIndex + 1) % musicTracks.length;
+    setCurrentTrackIndex(nextIdx);
+    if (isPlayingMusic) {
+      sounds.startBackgroundMusic(musicTracks[nextIdx].category);
+    }
+  };
+
+  const prevTrack = () => {
+    const prevIdx = (currentTrackIndex - 1 + musicTracks.length) % musicTracks.length;
+    setCurrentTrackIndex(prevIdx);
+    if (isPlayingMusic) {
+      sounds.startBackgroundMusic(musicTracks[prevIdx].category);
+    }
+  };
+
+  const toggleSmartbandConnection = () => {
+    setSmartbandMetrics(prev => ({
+      ...prev,
+      connected: !prev.connected,
+      lastSyncTime: 'Just now'
+    }));
   };
 
   // Recording cognitive game session
@@ -651,7 +1036,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     if (isOffline) {
-      // Add to offline sync queue
       const queueItem: SyncQueueItem = {
         id: 'sync-game-' + Date.now(),
         type: 'cognitive_session',
@@ -693,19 +1077,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const dismissAlert = (id: string) => {
-    setCaregiverAlerts(prev => {
-      const updated = prev.map(a => a.id === id ? { ...a, dismissed: true } : a);
-      syncChannel?.postMessage({ type: 'ALERT_UPDATE', payload: { alerts: updated } });
-      return updated;
-    });
+    setCaregiverAlerts(prev => prev.map(a => a.id === id ? { ...a, dismissed: true } : a));
   };
 
   const markAlertAction = (id: string) => {
-    setCaregiverAlerts(prev => {
-      const updated = prev.map(a => a.id === id ? { ...a, actionTaken: true } : a);
-      syncChannel?.postMessage({ type: 'ALERT_UPDATE', payload: { alerts: updated } });
-      return updated;
-    });
+    setCaregiverAlerts(prev => prev.map(a => a.id === id ? { ...a, actionTaken: true } : a));
     addTelemetryLog({
       source: 'caregiver',
       title: 'Caregiver Action Logged',
@@ -714,74 +1090,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // 1-Click Simulation Trigger for Live SIH Evaluator Tests
-  const triggerSimulationEvent = (eventType: 'morning_med' | 'memory_game' | 'sos_help' | 'hydration') => {
-    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    if (eventType === 'morning_med') {
-      const firstPending = routines.find(r => !r.completed) || routines[0];
-      if (firstPending) {
-        toggleRoutine(firstPending.id);
-      }
-    } else if (eventType === 'memory_game') {
-      recordCognitiveSession({
-        gameType: 'memory_match',
-        gameTitle: 'Familiar Memory Match',
-        durationSeconds: 68,
-        totalAttempts: 6,
-        accuracyPercentage: 86,
-        difficulty: 'medium',
-        responseAverageSeconds: 8.9,
-        hintsUsed: 0,
-        adaptiveDecision: {
-          ruleApplied: 'Adaptive Consistency Peak',
-          explanation: 'Asha beat her 7-day baseline (86% vs 84%). High response confidence recorded.',
-          nextRecommendedDifficulty: 'medium',
-          nextGameType: 'pattern_sequence'
-        }
-      });
-    } else if (eventType === 'sos_help') {
-      const sosAlert: CaregiverAlert = {
-        id: 'sos-alert-' + Date.now(),
-        timestamp: 'Just now (' + nowStr + ')',
-        type: 'attention',
-        title: 'Emergency Ring from Asha (Veranda Room)',
-        description: 'Asha triggered one-touch voice assistance connection from Guwahati residence.',
-        whatChanged: 'Immediate priority prompt activated on Caregiver Hub.',
-        significance: 'Meaningful Check-in',
-        suggestedAction: 'Answer incoming voice link or step into veranda.',
-        dismissed: false
-      };
-      setCaregiverAlerts(prev => {
-        const updated = [sosAlert, ...prev];
-        syncChannel?.postMessage({ type: 'ALERT_UPDATE', payload: { alerts: updated } });
-        return updated;
-      });
-      addTelemetryLog({
-        source: 'patient',
-        title: 'Emergency Help Ring Sent',
-        detail: 'Asha triggered one-touch call to Priya from device.',
-        type: 'sos'
-      });
-    } else if (eventType === 'hydration') {
-      const hyd = routines.find(r => r.category === 'hydration');
-      if (hyd) {
-        toggleRoutine(hyd.id);
-      }
-    }
-  };
-
   // Offline Sync execution
   const triggerSync = async () => {
     if (isSyncing || syncQueue.length === 0) return;
     setIsSyncing(true);
 
-    // Simulate 3-stage synchronization
     await new Promise(resolve => setTimeout(resolve, 800)); // Step 1: Encrypt & Package
     await new Promise(resolve => setTimeout(resolve, 900)); // Step 2: Push to Caregiver Store
     await new Promise(resolve => setTimeout(resolve, 500)); // Step 3: Recalculate baseline
 
-    // Add alert to Caregiver portal confirming sync
     const syncAlert: CaregiverAlert = {
       id: 'sync-alert-' + Date.now(),
       timestamp: 'Just now',
@@ -800,7 +1117,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsSyncing(false);
   };
 
-  // Compute Asha's Personal Baseline from current session data (Asha vs Asha)
+  // Compute Personal Baseline (Asha vs Asha)
   const calculateBaselineMetrics = (): BaselineMetric[] => {
     const last7 = cognitiveSessions.slice(0, 7).reverse();
     const accuracies = last7.length > 0 ? last7.map(s => s.accuracyPercentage) : [70, 72, 74, 76, 78, 80, 84];
@@ -856,7 +1173,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ];
   };
 
-  // Remote Voice Push Reminders (Priya -> Asha)
+  // Profile completion calculation
+  const completedCount = profileCompletionItems.filter(i => i.completed).length;
+  const profileCompletionPercentage = Math.round((completedCount / profileCompletionItems.length) * 100);
+
+  // Push Reminders (Priya -> Asha)
   const sendPushReminder = (rem: Omit<RemotePushReminder, 'id' | 'timestamp'>) => {
     const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const fullRem: RemotePushReminder = {
@@ -866,7 +1187,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setActivePushReminder(fullRem);
     sounds.playSuccess();
-    speakText(fullRem.voiceNoteText || fullRem.text, language);
+    speakText(fullRem.voiceNoteText || fullRem.text, language, { gender: 'female' });
     syncChannel?.postMessage({ type: 'REMOTE_PUSH_REMINDER', payload: { reminder: fullRem } });
     addTelemetryLog({
       source: 'caregiver',
@@ -892,7 +1213,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const ackMsg = `Asha confirmed: "${rem?.text || 'Routine'}" at ${nowStr}`;
     setLatestPushAcknowledgement(ackMsg);
     setTimeout(() => setLatestPushAcknowledgement(null), 5000);
-    syncChannel?.postMessage({ type: 'REMOTE_PUSH_ACKNOWLEDGED', payload: { reminderId: id, message: ackMsg } });
     addTelemetryLog({
       source: 'patient',
       title: 'Voice Reminder Acknowledged',
@@ -903,14 +1223,145 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const dismissPushReminder = () => {
     setActivePushReminder(null);
-    syncChannel?.postMessage({ type: 'REMOTE_PUSH_DISMISSED', payload: {} });
+  };
+
+  // Evaluator Simulation Center (Specification 39)
+  const triggerSimulation = (scenario: 
+    | 'alarm_medicine' 
+    | 'snooze_x3' 
+    | 'sos_fallback' 
+    | 'missing_patient' 
+    | 'take_me_home' 
+    | 'offline_toggle' 
+    | 'sync_reconcile' 
+    | 'game_adaptive_up' 
+    | 'smartband_pulse' 
+    | 'lang_assamese' 
+    | 'family_voice_push'
+  ) => {
+    switch (scenario) {
+      case 'alarm_medicine':
+        triggerAlarm('r1');
+        break;
+
+      case 'snooze_x3':
+        snoozeRoutine('r1');
+        setTimeout(() => snoozeRoutine('r1'), 200);
+        setTimeout(() => snoozeRoutine('r1'), 400);
+        break;
+
+      case 'sos_fallback':
+        startSosFlow();
+        break;
+
+      case 'missing_patient':
+        setLocation({
+          lat: 26.1550,
+          lng: 91.7820,
+          address: "G.S. Road near Dispur Supermarket",
+          areaName: "Outside Usual Home Area",
+          isHome: false,
+          distanceFromHomeKm: 1.8,
+          lastUpdated: "Just now",
+          isLive: true
+        });
+        setIsMissingPatientScenario(true);
+        setActiveSafetyTab('take_me_home');
+        
+        const locAlert: CaregiverAlert = {
+          id: 'geofence-alert-' + Date.now(),
+          timestamp: 'Just now',
+          type: 'location',
+          title: 'GEOFENCE ALERT: Asha is Outside Home Area',
+          description: 'Asha is currently 1.8 km away from Guwahati residence near G.S. Road. Navigation guidance is active on her device.',
+          whatChanged: 'Patient stepped outside the 500m safe home boundary.',
+          significance: 'High Priority',
+          suggestedAction: 'Check Asha\'s live route or call Meera/Rahul.',
+          dismissed: false
+        };
+        setCaregiverAlerts(alerts => [locAlert, ...alerts]);
+        addTelemetryLog({
+          source: 'ai_engine',
+          title: 'Geofence Departure Detected',
+          detail: 'Asha is 1.8 km away from home. "Take Me Home" activated.',
+          type: 'location'
+        });
+        break;
+
+      case 'take_me_home':
+        setActiveSafetyTab('take_me_home');
+        speakText("Asha, follow the simple steps on your screen to walk back home safely.", language);
+        break;
+
+      case 'offline_toggle':
+        setIsOffline(!isOffline);
+        addTelemetryLog({
+          source: 'ai_engine',
+          title: !isOffline ? 'Network Disconnected (Offline Mode)' : 'Network Reconnected',
+          detail: !isOffline ? 'Local storage caching active. Zero downtime.' : 'Ready to synchronize pending items.',
+          type: 'sync'
+        });
+        break;
+
+      case 'sync_reconcile':
+        triggerSync();
+        break;
+
+      case 'game_adaptive_up':
+        recordCognitiveSession({
+          gameType: 'memory_match',
+          gameTitle: 'Familiar Memory Match',
+          durationSeconds: 58,
+          totalAttempts: 6,
+          accuracyPercentage: 92,
+          difficulty: 'level_3',
+          responseAverageSeconds: 7.8,
+          hintsUsed: 0,
+          adaptiveDecision: {
+            ruleApplied: 'High Accuracy & Speed Acceleration',
+            explanation: 'Asha achieved 92% accuracy with rapid 7.8s recall. Difficulty automatically increased from Level 3 to Level 4 (12 cards).',
+            nextRecommendedDifficulty: 'level_4',
+            nextGameType: 'memory_match'
+          }
+        });
+        break;
+
+      case 'smartband_pulse':
+        setSmartbandMetrics(prev => ({
+          ...prev,
+          stepsToday: prev.stepsToday + 350,
+          heartRateBpm: 76,
+          activityLevel: 'Active'
+        }));
+        addTelemetryLog({
+          source: 'ai_engine',
+          title: 'Smartband Telemetry Updated',
+          detail: 'Step count: 3,770, HR: 76 bpm. Active walking detected.',
+          type: 'insight'
+        });
+        break;
+
+      case 'lang_assamese':
+        setLanguage('as');
+        speakText("শুভ প্ৰভাত আশা দেৱী। স্মৃতিকোৱাৰ আপোনাৰ লগত আছে।", 'as');
+        break;
+
+      case 'family_voice_push':
+        sendPushReminder({
+          text: "Ma, remember to drink your warm lemon water before lunch!",
+          category: 'hydration',
+          senderName: 'Meera (Daughter)',
+          voiceNoteText: "Ma, this is Meera. Please drink your warm water now. I love you!"
+        });
+        break;
+    }
   };
 
   return (
     <AppContext.Provider
       value={{
         role,
-        setRole: handleSetRole,
+        setRole,
         language,
         setLanguage,
         patient,
@@ -918,6 +1369,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleRoutine,
         snoozeRoutine,
         addRoutineItem,
+        updateRoutinePriority,
         cognitiveSessions,
         recordCognitiveSession,
         familyMemories,
@@ -926,20 +1378,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         caregiverAlerts,
         dismissAlert,
         markAlertAction,
+        alarmOverlay,
+        triggerAlarm,
+        dismissAlarm,
+        snoozeAlarm,
+        sosStep,
+        emergencyContacts,
+        startSosFlow,
+        resetSosFlow,
+        generatedSosSms,
+        location,
+        places,
+        navigationSteps,
+        isMissingPatientScenario,
+        setIsMissingPatientScenario,
+        smartbandMetrics,
+        toggleSmartbandConnection,
+        musicTracks,
+        currentTrackIndex,
+        isPlayingMusic,
+        togglePlayMusic,
+        nextTrack,
+        prevTrack,
+        profileCompletionItems,
+        profileCompletionPercentage,
         isOffline,
         setIsOffline,
         syncQueue,
         isSyncing,
         lastSyncedTime,
         triggerSync,
-        demoTourStep,
-        setDemoTourStep,
-        isDemoTourActive,
-        setIsDemoTourActive,
-        activeGameTab,
-        setActiveGameTab,
         isVoiceOpen,
         setIsVoiceOpen,
+        activeGameTab,
+        setActiveGameTab,
+        activeSafetyTab,
+        setActiveSafetyTab,
         mobileTab,
         setMobileTab,
         deviceFrame,
@@ -948,12 +1422,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setMobileSubRole,
         telemetryLogs,
         addTelemetryLog,
-        triggerSimulationEvent,
         activePushReminder,
         sendPushReminder,
         acknowledgePushReminder,
         dismissPushReminder,
-        latestPushAcknowledgement
+        latestPushAcknowledgement,
+        demoTourStep,
+        setDemoTourStep,
+        isDemoTourActive,
+        setIsDemoTourActive,
+        triggerSimulationEvent: (ev) => {
+          if (ev === 'morning_med') triggerSimulation('alarm_medicine');
+          else if (ev === 'memory_game') triggerSimulation('game_adaptive_up');
+          else if (ev === 'sos_help') triggerSimulation('sos_fallback');
+          else if (ev === 'hydration') triggerSimulation('family_voice_push');
+        },
+        triggerSimulation
       }}
     >
       {children}
