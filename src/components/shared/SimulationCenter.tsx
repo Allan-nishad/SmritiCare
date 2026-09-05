@@ -37,7 +37,10 @@ export const SimulationCenter: React.FC = () => {
       | 'game_adaptive_up' 
       | 'smartband_pulse' 
       | 'lang_assamese' 
-      | 'family_voice_push',
+      | 'family_voice_push'
+      | 'caregiver_setup'
+      | 'face_recognition'
+      | 'phone_separation',
     label: string
   ) => {
     triggerSimulation(scenario);
@@ -194,6 +197,33 @@ export const SimulationCenter: React.FC = () => {
               >
                 <Mic className="w-4 h-4 text-amber-300 animate-pulse" />
                 <span>Simulate Spoken Family Voice Reminder</span>
+              </button>
+
+              {/* 12. First-Time Caregiver Setup Screen (Requested) */}
+              <button
+                onClick={() => handleAction('caregiver_setup', '1st-Time Caregiver Onboarding Setup Screen')}
+                className="p-2.5 bg-stone-900 hover:bg-stone-800 text-emerald-300 border border-emerald-500/40 rounded-2xl flex items-center gap-2 text-left transition active:scale-95 shadow-sm"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="leading-tight">Simulate 1st-Time Setup Screen</span>
+              </button>
+
+              {/* 13. Patient Access via Face Recognition (Requested) */}
+              <button
+                onClick={() => handleAction('face_recognition', 'Elderly Face ID Access Scan')}
+                className="p-2.5 bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-500/40 rounded-2xl flex items-center gap-2 text-left transition active:scale-95 shadow-sm"
+              >
+                <Sliders className="w-4 h-4 text-amber-400 shrink-0" />
+                <span className="leading-tight">Simulate Patient Face ID</span>
+              </button>
+
+              {/* 14. Patient Phone Separation / Device Alert (Requested) */}
+              <button
+                onClick={() => handleAction('phone_separation', 'Smartband Phone Separation Proximity Alert')}
+                className="col-span-2 p-2.5 bg-gradient-to-r from-red-900 to-red-950 hover:from-red-800 text-red-100 border border-red-500/50 rounded-2xl flex items-center justify-center gap-2 text-center transition active:scale-95 shadow"
+              >
+                <AlertTriangle className="w-4 h-4 text-red-400 animate-pulse" />
+                <span>Simulate Phone Separation Alert (Smartband Vibration)</span>
               </button>
 
             </div>

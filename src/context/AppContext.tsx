@@ -129,6 +129,12 @@ interface AppContextType {
   // Evaluator Simulation Center Triggers (Specification 39)
   activeSimulation: { scenario: string; title: string; subtitle: string; timestamp: string; stepDetails: string[] } | null;
   setActiveSimulation: (sim: { scenario: string; title: string; subtitle: string; timestamp: string; stepDetails: string[] } | null) => void;
+  isOnboardingOpen: boolean;
+  setIsOnboardingOpen: (open: boolean) => void;
+  isFaceIdOpen: boolean;
+  setIsFaceIdOpen: (open: boolean) => void;
+  isPhoneSeparationOpen: boolean;
+  setIsPhoneSeparationOpen: (open: boolean) => void;
   triggerSimulation: (scenario: 
     | 'alarm_medicine' 
     | 'snooze_x3' 
@@ -141,6 +147,9 @@ interface AppContextType {
     | 'smartband_pulse' 
     | 'lang_assamese' 
     | 'family_voice_push'
+    | 'caregiver_setup'
+    | 'face_recognition'
+    | 'phone_separation'
   ) => void;
 }
 
@@ -687,6 +696,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [deviceFrame, setDeviceFrame] = useState<DeviceFrameStyle>('iphone');
   const [mobileSubRole, setMobileSubRole] = useState<'patient' | 'caregiver'>('patient');
   const [activeSimulation, setActiveSimulation] = useState<{ scenario: string; title: string; subtitle: string; timestamp: string; stepDetails: string[] } | null>(null);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
+  const [isFaceIdOpen, setIsFaceIdOpen] = useState<boolean>(false);
+  const [isPhoneSeparationOpen, setIsPhoneSeparationOpen] = useState<boolean>(false);
 
   // Telemetry Logs for Real-time inspection
   const [telemetryLogs, setTelemetryLogs] = useState<TelemetryLogItem[]>([
@@ -1261,6 +1273,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     | 'smartband_pulse' 
     | 'lang_assamese' 
     | 'family_voice_push'
+    | 'caregiver_setup'
+    | 'face_recognition'
+    | 'phone_separation'
   ) => {
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -1473,6 +1488,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           voiceNoteText: "Ma, this is Priya. Please drink your warm water now. We are right here with you."
         });
         break;
+
+      case 'caregiver_setup':
+        setIsOnboardingOpen(true);
+        setActiveSimulation({
+          scenario: 'caregiver_setup',
+          title: '🧙 First-Time Caregiver Setup Wizard (SIH 26003.1)',
+          subtitle: '5-step onboarding: Patient profile, voice calibration, Assamese cultural anchors, geofence, and BLE Smartband pairing.',
+          timestamp: nowTime,
+          stepDetails: ['1. Profile & Language', '2. Voice & Cultural Anchors', '3. Geofence & IoT Pairing']
+        });
+        sounds.playChime();
+        break;
+
+      case 'face_recognition':
+        setIsFaceIdOpen(true);
+        setActiveSimulation({
+          scenario: 'face_recognition',
+          title: '📷 Patient Facial Recognition Access (SIH 26003.2)',
+          subtitle: 'Elderly-friendly biometric scan with animated camera reticle — 99.4% match without requiring password recall.',
+          timestamp: nowTime,
+          stepDetails: ['1. Front Camera Biometric Scan', '2. Match Confirmed (99.4%)', '3. Spoken Welcome in Assamese']
+        });
+        sounds.playChime();
+        break;
+
+      case 'phone_separation':
+        setIsPhoneSeparationOpen(true);
+        setActiveSimulation({
+          scenario: 'phone_separation',
+          title: '⚠️ Smartband Proximity Separation Alert (SIH 26003.19)',
+          subtitle: 'Asha left phone on veranda (18m away). Smartband vibrated on wrist and engaged independent cellular GPS beacon while alerting Priya in Red.',
+          timestamp: nowTime,
+          stepDetails: ['1. 18m BLE RSSI Separation', '2. Wrist Haptic Vibration Alert', '3. Caregiver Red Banner Dispatched']
+        });
+        const sepAlert: CaregiverAlert = {
+          id: 'sep-alert-' + Date.now(),
+          timestamp: 'Just now',
+          type: 'attention',
+          title: 'DEVICE SEPARATION: Asha is away from Smartphone',
+          description: 'Asha is 18 meters away from her phone (likely walking in veranda/garden). Her GPS Band v2 is actively tracking her independently.',
+          whatChanged: 'Bluetooth RSSI beacon dropped below threshold (18m separation).',
+          significance: 'High Priority',
+          suggestedAction: 'Smartband cellular GPS is active. Ring phone if needed.',
+          dismissed: false
+        };
+        setCaregiverAlerts(alerts => [sepAlert, ...alerts]);
+        sounds.playWarning();
+        addTelemetryLog({
+          source: 'ai_engine',
+          title: 'Phone Separation Triggered',
+          detail: 'Patient 18m from phone. Band haptic alert active.',
+          type: 'location'
+        });
+        break;
     }
   };
 
@@ -1555,6 +1624,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsDemoTourActive,
         activeSimulation,
         setActiveSimulation,
+        isOnboardingOpen,
+        setIsOnboardingOpen,
+        isFaceIdOpen,
+        setIsFaceIdOpen,
+        isPhoneSeparationOpen,
+        setIsPhoneSeparationOpen,
         triggerSimulationEvent: (ev) => {
           if (ev === 'morning_med') triggerSimulation('alarm_medicine');
           else if (ev === 'memory_game') triggerSimulation('game_adaptive_up');

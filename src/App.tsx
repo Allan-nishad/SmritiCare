@@ -13,9 +13,20 @@ import { SimulationCenter } from './components/shared/SimulationCenter';
 import { EmergencySosOverlay } from './components/patient/EmergencySosOverlay';
 import { IncomingPushOverlay } from './components/patient/IncomingPushOverlay';
 import { LiveSimulationBanner } from './components/shared/LiveSimulationBanner';
+import { CaregiverOnboardingModal } from './components/shared/CaregiverOnboardingModal';
+import { PatientFaceRecognitionModal } from './components/shared/PatientFaceRecognitionModal';
+import { PhoneSeparationModal } from './components/shared/PhoneSeparationModal';
 
 const AppContent: React.FC = () => {
-  const { role } = useApp();
+  const { 
+    role, 
+    isOnboardingOpen, 
+    setIsOnboardingOpen, 
+    isFaceIdOpen, 
+    setIsFaceIdOpen, 
+    isPhoneSeparationOpen, 
+    setIsPhoneSeparationOpen 
+  } = useApp();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF7F2] text-[#2C241E] selection:bg-terracotta-200">
@@ -42,6 +53,24 @@ const AppContent: React.FC = () => {
 
       {/* Caregiver Remote Push Voice Reminder Overlay (Specification 20) */}
       <IncomingPushOverlay />
+
+      {/* First-Time Caregiver Onboarding / Setup Screen Modal */}
+      <CaregiverOnboardingModal 
+        isOpen={isOnboardingOpen} 
+        onClose={() => setIsOnboardingOpen(false)} 
+      />
+
+      {/* Patient Access via Face Recognition Modal */}
+      <PatientFaceRecognitionModal 
+        isOpen={isFaceIdOpen} 
+        onClose={() => setIsFaceIdOpen(false)} 
+      />
+
+      {/* Smartband Proximity / Phone Separation Alert Modal */}
+      <PhoneSeparationModal 
+        isOpen={isPhoneSeparationOpen} 
+        onClose={() => setIsPhoneSeparationOpen(false)} 
+      />
 
       {/* Persistent Soothing Background Music Player Widget (Specification 23) */}
       <MusicPlayerWidget />

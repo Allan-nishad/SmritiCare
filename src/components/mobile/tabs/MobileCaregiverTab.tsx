@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
+import { InteractiveMap } from '../../shared/InteractiveMap';
 import { sounds, speakText } from '../../../utils/audio';
 import confetti from 'canvas-confetti';
 import { 
@@ -32,7 +33,8 @@ import {
   Users,
   MapPin,
   Utensils,
-  PhoneCall
+  PhoneCall,
+  Navigation
 } from 'lucide-react';
 
 export const MobileCaregiverTab: React.FC = () => {
@@ -299,6 +301,23 @@ export const MobileCaregiverTab: React.FC = () => {
               </span>
               <span>SpO2: <strong>98%</strong> • Temp: <strong>98.4°F</strong></span>
             </div>
+          </div>
+
+          {/* 🗺️ Interactive Live Patient Location Map */}
+          <div className="bg-white rounded-2xl p-3 border border-sand-200 shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1 text-[11px] font-black text-emerald-900 uppercase">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Asha's Live Location Map</span>
+              </div>
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                location.isHome ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800 animate-pulse font-black'
+              }`}>
+                {location.isHome ? 'Safe at Home' : 'Away (1.8km)'}
+              </span>
+            </div>
+
+            <InteractiveMap heightClass="h-44" compact />
           </div>
 
           {/* 🚨 CRITICAL HIGH PRIORITY RED ALERTS */}

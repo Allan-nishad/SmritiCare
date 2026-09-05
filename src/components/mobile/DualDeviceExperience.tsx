@@ -249,6 +249,27 @@ export const DualDeviceExperience: React.FC = () => {
           </button>
 
           <button
+            onClick={() => handleQuickSim('caregiver_setup', 'First-Time Caregiver Setup Screen')}
+            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-emerald-300 border border-emerald-500/50 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            🧙 1st-Time Setup Screen
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('face_recognition', 'Patient Face ID Access')}
+            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/50 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            📷 Patient Face ID
+          </button>
+
+          <button
+            onClick={() => handleQuickSim('phone_separation', 'Smartband Phone Separation Alert')}
+            className="px-3 py-1.5 bg-red-900/90 hover:bg-red-800 text-red-100 border border-red-500/60 rounded-xl transition active:scale-95 shadow-xs"
+          >
+            ⚠️ Phone Separation Alert
+          </button>
+
+          <button
             onClick={() => handleQuickSim('lang_assamese', 'Assamese Language')}
             className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-stone-700 rounded-xl transition active:scale-95 shadow-xs"
           >

@@ -4,6 +4,7 @@ import { BaselineAnalytics } from './BaselineAnalytics';
 import { ChangeInsights } from './ChangeInsights';
 import { IntelligenceVisualizer } from './IntelligenceVisualizer';
 import { PersonalizationStudio } from './PersonalizationStudio';
+import { InteractiveMap } from '../shared/InteractiveMap';
 import { sounds, speakText } from '../../utils/audio';
 import confetti from 'canvas-confetti';
 import { 
@@ -73,6 +74,7 @@ export const CaregiverDashboard: React.FC = () => {
     profileCompletionItems,
     sendPushReminder,
     latestPushAcknowledgement,
+    triggerSimulation,
     setRole 
   } = useApp();
 
@@ -685,36 +687,37 @@ export const CaregiverDashboard: React.FC = () => {
 
           {/* G. GEOFENCE SAFETY MAP */}
           <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border-2 border-sand-200 shadow-soft space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <span className="text-xs font-black uppercase text-terracotta-700 tracking-wider">
                   Real-Time Geofencing & Fallback Layer
                 </span>
                 <h3 className="text-2xl sm:text-3xl font-black text-stone-900 font-serif">
-                  Asha's Location Safety Hub
+                  Asha's Location Safety Hub & Live Map
                 </h3>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => triggerSimulation(location.isHome ? 'missing_patient' : 'take_me_home')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition active:scale-95 flex items-center gap-1.5 shadow ${
+                    location.isHome
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  }`}
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>{location.isHome ? 'Simulate Geofence Departure (1.8km)' : 'Simulate Return Home (Safe)'}</span>
+                </button>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                   location.isHome ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800 animate-pulse font-black'
                 }`}>
-                  {location.isHome ? 'Within Safe Home Boundary' : 'Outside Geofence (1.8 km)'}
+                  {location.isHome ? 'Within Safe 500m Home Boundary' : 'Outside Geofence (1.8 km)'}
                 </span>
               </div>
             </div>
 
-            {/* Simulated Map */}
-            <div className="w-full h-72 rounded-3xl bg-slate-900 border-4 border-sand-200 overflow-hidden relative flex items-center justify-center text-white">
-              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]" />
-              
-              <div className="text-center space-y-2 relative z-10">
-                <MapPin className="w-12 h-12 text-terracotta-500 mx-auto animate-bounce" />
-                <h4 className="text-xl font-black">{location.address}</h4>
-                <p className="text-xs text-stone-400 font-mono">
-                  Coordinates: {location.lat}° N, {location.lng}° E • GPS Status: {location.isLive ? 'LIVE' : 'Cached Offline'}
-                </p>
-              </div>
-            </div>
+            {/* Interactive OpenStreetMap Component */}
+            <InteractiveMap heightClass="h-80 sm:h-96" />
 
             {/* Emergency Fallback Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
