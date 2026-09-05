@@ -78,8 +78,8 @@ export const CaregiverDashboard: React.FC = () => {
     setRole 
   } = useApp();
 
-  // 2 Master Pages: 1) Performance & Smart Health Hub, 2) Patient Info & Personalization Studio
-  const [activeMasterPage, setActiveMasterPage] = useState<'performance_hub' | 'patient_info'>('performance_hub');
+  // 3 Master Pages: 1) Performance & Health Hub, 2) Location Safety Map, 3) Patient Info & Personalization Studio
+  const [activeMasterPage, setActiveMasterPage] = useState<'performance_hub' | 'safety_map' | 'patient_info'>('performance_hub');
   
   // States for Quick Push & Interaction
   const [pushReminderText, setPushReminderText] = useState('');
@@ -298,30 +298,42 @@ export const CaregiverDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. PRIMARY 2-PAGE MASTER NAVIGATION SWITCHER */}
-      <div className="flex p-1.5 bg-sand-200/80 rounded-2xl border-2 border-sand-300 max-w-2xl mx-auto shadow-inner">
+      {/* 3. PRIMARY 3-PAGE MASTER NAVIGATION SWITCHER */}
+      <div className="flex flex-wrap p-1.5 bg-[#EEF4EC] rounded-2xl border-2 border-[#A8C3A0]/50 max-w-4xl mx-auto shadow-inner gap-1">
         <button
           onClick={() => setActiveMasterPage('performance_hub')}
-          className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${
             activeMasterPage === 'performance_hub'
-              ? 'bg-white text-stone-900 shadow-md scale-[1.01]'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-sand-100'
+              ? 'bg-[#356859] text-white shadow-md scale-[1.01]'
+              : 'text-[#26332F] hover:text-[#356859] hover:bg-white/60'
           }`}
         >
-          <Activity className="w-4 h-4 text-terracotta-600" />
-          <span>Page 1: 📊 Patient Performance & Smart Health Hub</span>
+          <Activity className="w-4 h-4 text-[#D88965]" />
+          <span>Page 1: 📊 Health & Vitals</span>
+        </button>
+
+        <button
+          onClick={() => setActiveMasterPage('safety_map')}
+          className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${
+            activeMasterPage === 'safety_map'
+              ? 'bg-[#356859] text-white shadow-md scale-[1.01]'
+              : 'text-[#26332F] hover:text-[#356859] hover:bg-white/60'
+          }`}
+        >
+          <MapPin className="w-4 h-4 text-[#D88965]" />
+          <span>Page 2: 🗺️ Location & Safety Map</span>
         </button>
 
         <button
           onClick={() => setActiveMasterPage('patient_info')}
-          className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${
             activeMasterPage === 'patient_info'
-              ? 'bg-white text-stone-900 shadow-md scale-[1.01]'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-sand-100'
+              ? 'bg-[#356859] text-white shadow-md scale-[1.01]'
+              : 'text-[#26332F] hover:text-[#356859] hover:bg-white/60'
           }`}
         >
-          <User className="w-4 h-4 text-sage-600" />
-          <span>Page 2: 🗂️ Patient Information & Personalization Studio</span>
+          <User className="w-4 h-4 text-[#A8C3A0]" />
+          <span>Page 3: 🗂️ Patient Info & Feeding</span>
         </button>
       </div>
 
@@ -685,61 +697,85 @@ export const CaregiverDashboard: React.FC = () => {
           {/* F. MEANINGFUL CHANGE INSIGHTS */}
           <ChangeInsights />
 
-          {/* G. GEOFENCE SAFETY MAP */}
-          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border-2 border-sand-200 shadow-soft space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* PAGE 2: DEDICATED LOCATION SAFETY & GEOFENCE MAP HUB                      */}
+      {/* ========================================================================= */}
+      {activeMasterPage === 'safety_map' && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          
+          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border-2 border-[#A8C3A0]/50 shadow-soft space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-sand-200">
               <div>
-                <span className="text-xs font-black uppercase text-terracotta-700 tracking-wider">
+                <span className="text-xs font-black uppercase text-[#D88965] tracking-wider">
                   Real-Time Geofencing & Fallback Layer
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-stone-900 font-serif">
-                  Asha's Location Safety Hub & Live Map
+                <h3 className="text-2xl sm:text-3xl font-black text-[#26332F] font-serif">
+                  Asha's Location Safety Hub & Interactive Map
                 </h3>
+                <p className="text-xs sm:text-sm text-[#526861] font-medium">
+                  Live satellite & street-level GPS tracking, 400m safe perimeter around residence, and immediate geofence departure alerts
+                </p>
               </div>
+
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => triggerSimulation(location.isHome ? 'missing_patient' : 'take_me_home')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition active:scale-95 flex items-center gap-1.5 shadow ${
+                  className={`px-4 py-2 rounded-xl text-xs font-black transition active:scale-95 flex items-center gap-1.5 shadow-md ${
                     location.isHome
-                      ? 'bg-red-600 hover:bg-red-700 text-white'
-                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      ? 'bg-[#C95C5C] hover:bg-red-700 text-white'
+                      : 'bg-[#5E9367] hover:bg-emerald-700 text-white'
                   }`}
                 >
-                  <Navigation className="w-3.5 h-3.5" />
+                  <Navigation className="w-4 h-4" />
                   <span>{location.isHome ? 'Simulate Geofence Departure (1.8km)' : 'Simulate Return Home (Safe)'}</span>
                 </button>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  location.isHome ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800 animate-pulse font-black'
+
+                <span className={`px-3.5 py-1.5 rounded-full text-xs font-bold ${
+                  location.isHome ? 'bg-[#EAF3EC] text-[#356859] border border-[#5E9367]/40' : 'bg-[#FCECEC] text-[#C95C5C] border border-[#C95C5C]/50 animate-pulse font-black'
                 }`}>
-                  {location.isHome ? 'Within Safe 500m Home Boundary' : 'Outside Geofence (1.8 km)'}
+                  {location.isHome ? 'Within Safe 500m Home Boundary' : '🚨 Outside Geofence (1.8 km Away)'}
                 </span>
               </div>
             </div>
 
             {/* Interactive OpenStreetMap Component */}
-            <InteractiveMap heightClass="h-80 sm:h-96" />
+            <InteractiveMap heightClass="h-96 sm:h-[480px]" />
 
             {/* Emergency Fallback Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="bg-sand-50 p-5 rounded-2xl border border-sand-200 space-y-2">
-                <h5 className="text-xs font-black text-stone-500 uppercase tracking-wider">Contact 1 (Primary)</h5>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div className="bg-[#EEF4EC] p-5 rounded-2xl border border-[#A8C3A0]/50 space-y-2">
+                <h5 className="text-xs font-black text-[#526861] uppercase tracking-wider">Primary Contact (Tier 1)</h5>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-bold text-base text-stone-900">Meera Devi (Daughter)</h4>
-                    <p className="text-xs text-stone-600">+91 94350 12345 • Tezpur, Assam</p>
+                    <h4 className="font-bold text-base text-[#26332F]">Meera Devi (Daughter)</h4>
+                    <p className="text-xs text-[#526861]">+91 94350 12345 • Tezpur, Assam</p>
                   </div>
-                  <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-lg">Verified</span>
+                  <span className="text-xs font-bold bg-[#EAF3EC] text-[#356859] px-2.5 py-1 rounded-lg">Verified</span>
                 </div>
               </div>
 
-              <div className="bg-sand-50 p-5 rounded-2xl border border-sand-200 space-y-2">
-                <h5 className="text-xs font-black text-stone-500 uppercase tracking-wider">Contact 2 (Fallback)</h5>
+              <div className="bg-[#EEF4EC] p-5 rounded-2xl border border-[#A8C3A0]/50 space-y-2">
+                <h5 className="text-xs font-black text-[#526861] uppercase tracking-wider">Fallback Contact (Tier 2)</h5>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-bold text-base text-stone-900">Rahul Sharma (Son)</h4>
-                    <p className="text-xs text-stone-600">+91 98640 67890 • Guwahati, Assam</p>
+                    <h4 className="font-bold text-base text-[#26332F]">Rahul Sharma (Son)</h4>
+                    <p className="text-xs text-[#526861]">+91 98640 67890 • Guwahati, Assam</p>
                   </div>
-                  <span className="text-xs font-bold bg-cyan-100 text-cyan-800 px-2.5 py-1 rounded-lg">Verified</span>
+                  <span className="text-xs font-bold bg-[#EAF3EC] text-[#356859] px-2.5 py-1 rounded-lg">Verified</span>
+                </div>
+              </div>
+
+              <div className="bg-[#EEF4EC] p-5 rounded-2xl border border-[#A8C3A0]/50 space-y-2">
+                <h5 className="text-xs font-black text-[#526861] uppercase tracking-wider">Emergency Facility (Tier 3)</h5>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-base text-[#26332F]">GMCH Guwahati</h4>
+                    <p className="text-xs text-[#526861]">3.2 km Away • Dr. B. Barman</p>
+                  </div>
+                  <span className="text-xs font-bold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-lg">24x7</span>
                 </div>
               </div>
             </div>
@@ -749,7 +785,7 @@ export const CaregiverDashboard: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* PAGE 2: PATIENT INFORMATION & PERSONALIZATION STUDIO */}
+      {/* PAGE 3: PATIENT INFORMATION & PERSONALIZATION STUDIO */}
       {/* ========================================================================= */}
       {activeMasterPage === 'patient_info' && (
         <div className="space-y-8 animate-in fade-in duration-300">

@@ -59,17 +59,18 @@ export const MobileCaregiverTab: React.FC = () => {
     triggerSync, 
     sendPushReminder,
     latestPushAcknowledgement,
+    triggerSimulation,
     setRole
   } = useApp();
 
-  // 2 Master Pages inside Mobile Caregiver Hub
-  const [activeMobilePage, setActiveMobilePage] = useState<'performance' | 'patient_info'>('performance');
+  // 3 Master Pages inside Mobile Caregiver Hub: 1) Health, 2) Map, 3) Patient Info & Feeding
+  const [activeMobilePage, setActiveMobilePage] = useState<'performance' | 'map' | 'patient_info'>('performance');
 
   const [customText, setCustomText] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [justSentPreset, setJustSentPreset] = useState<string | null>(null);
 
-  // Form states for feeding data in Mobile Page 2
+  // Form states for feeding data in Mobile Page 3
   const [newRoutineTime, setNewRoutineTime] = useState('03:30 PM');
   const [newRoutineTitle, setNewRoutineTitle] = useState('');
   const [newRoutineCategory, setNewRoutineCategory] = useState<'medicine' | 'hydration' | 'meal' | 'activity' | 'walk' | 'family'>('hydration');
@@ -167,7 +168,7 @@ export const MobileCaregiverTab: React.FC = () => {
       
       {/* Real-time Asha Acknowledged Toast Alert */}
       {latestPushAcknowledgement && (
-        <div className="bg-emerald-600 text-white p-3 rounded-2xl shadow-lg border-2 border-emerald-300 flex items-center gap-2 animate-in slide-in-from-top duration-300">
+        <div className="bg-[#5E9367] text-white p-3 rounded-2xl shadow-lg border-2 border-emerald-300 flex items-center gap-2 animate-in slide-in-from-top duration-300">
           <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
             <Check className="w-4 h-4 stroke-[3] text-white" />
           </div>
@@ -178,35 +179,47 @@ export const MobileCaregiverTab: React.FC = () => {
         </div>
       )}
 
-      {/* 2-PAGE MASTER TABS SWITCHER */}
-      <div className="flex p-1 bg-sand-200 rounded-xl border border-sand-300 shadow-inner">
+      {/* 3-PAGE MASTER TABS SWITCHER */}
+      <div className="flex p-1 bg-[#EEF4EC] rounded-xl border border-[#A8C3A0]/60 shadow-inner gap-1">
         <button
           onClick={() => setActiveMobilePage('performance')}
-          className={`flex-1 py-2 px-2 rounded-lg text-[11px] font-black transition-all flex items-center justify-center gap-1 ${
+          className={`flex-1 py-2 px-1.5 rounded-lg text-[10.5px] font-black transition-all flex items-center justify-center gap-1 ${
             activeMobilePage === 'performance'
-              ? 'bg-white text-stone-900 shadow-sm'
-              : 'text-stone-600 hover:text-stone-900'
+              ? 'bg-[#356859] text-white shadow-sm'
+              : 'text-[#26332F] hover:text-[#356859]'
           }`}
         >
-          <Activity className="w-3.5 h-3.5 text-terracotta-600" />
-          <span>1. 📊 Health & Alerts</span>
+          <Activity className="w-3.5 h-3.5 text-[#D88965]" />
+          <span>1. 📊 Health</span>
+        </button>
+
+        <button
+          onClick={() => setActiveMobilePage('map')}
+          className={`flex-1 py-2 px-1.5 rounded-lg text-[10.5px] font-black transition-all flex items-center justify-center gap-1 ${
+            activeMobilePage === 'map'
+              ? 'bg-[#356859] text-white shadow-sm'
+              : 'text-[#26332F] hover:text-[#356859]'
+          }`}
+        >
+          <MapPin className="w-3.5 h-3.5 text-[#D88965]" />
+          <span>2. 🗺️ Safety Map</span>
         </button>
 
         <button
           onClick={() => setActiveMobilePage('patient_info')}
-          className={`flex-1 py-2 px-2 rounded-lg text-[11px] font-black transition-all flex items-center justify-center gap-1 ${
+          className={`flex-1 py-2 px-1.5 rounded-lg text-[10.5px] font-black transition-all flex items-center justify-center gap-1 ${
             activeMobilePage === 'patient_info'
-              ? 'bg-white text-stone-900 shadow-sm'
-              : 'text-stone-600 hover:text-stone-900'
+              ? 'bg-[#356859] text-white shadow-sm'
+              : 'text-[#26332F] hover:text-[#356859]'
           }`}
         >
-          <User className="w-3.5 h-3.5 text-sage-600" />
-          <span>2. 🗂️ Info & Feeding</span>
+          <User className="w-3.5 h-3.5 text-[#A8C3A0]" />
+          <span>3. 🗂️ Info</span>
         </button>
       </div>
 
       {/* ========================================================================= */}
-      {/* PAGE 1: PERFORMANCE, SMART WEARABLES & RED ALERTS                        */}
+      {/* PAGE 1: HEALTH, SMART WEARABLES & RED ALERTS                              */}
       {/* ========================================================================= */}
       {activeMobilePage === 'performance' && (
         <div className="space-y-3.5 animate-in fade-in">
@@ -301,23 +314,6 @@ export const MobileCaregiverTab: React.FC = () => {
               </span>
               <span>SpO2: <strong>98%</strong> • Temp: <strong>98.4°F</strong></span>
             </div>
-          </div>
-
-          {/* 🗺️ Interactive Live Patient Location Map */}
-          <div className="bg-white rounded-2xl p-3 border border-sand-200 shadow-sm space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1 text-[11px] font-black text-emerald-900 uppercase">
-                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Asha's Live Location Map</span>
-              </div>
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                location.isHome ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800 animate-pulse font-black'
-              }`}>
-                {location.isHome ? 'Safe at Home' : 'Away (1.8km)'}
-              </span>
-            </div>
-
-            <InteractiveMap heightClass="h-44" compact />
           </div>
 
           {/* 🚨 CRITICAL HIGH PRIORITY RED ALERTS */}
@@ -476,7 +472,102 @@ export const MobileCaregiverTab: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* PAGE 2: PATIENT INFO, FEEDING TIMETABLE & DATA FEEDING STUDIO             */}
+      {/* PAGE 2: DEDICATED LOCATION SAFETY & GEOFENCE MAP HUB                      */}
+      {/* ========================================================================= */}
+      {activeMobilePage === 'map' && (
+        <div className="space-y-3.5 animate-in fade-in">
+          
+          {/* Header & Geofence Status Card */}
+          <div className="bg-white rounded-2xl p-3.5 border border-[#A8C3A0]/60 shadow-sm space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-[11px] font-black text-[#356859] uppercase">
+                <MapPin className="w-4 h-4 text-[#D88965]" />
+                <span>Live Location & Geofence</span>
+              </div>
+              <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full ${
+                location.isHome 
+                  ? 'bg-[#EAF3EC] text-[#356859] border border-[#5E9367]/40' 
+                  : 'bg-[#FCECEC] text-[#C95C5C] border border-[#C95C5C]/50 animate-pulse font-black'
+              }`}>
+                {location.isHome ? '🟢 Safe at Home (Guwahati)' : '🚨 1.8km Away (Outside Geofence)'}
+              </span>
+            </div>
+
+            {/* Live Interactive OpenStreetMap */}
+            <div className="rounded-xl overflow-hidden border border-[#A8C3A0]/40 shadow-inner">
+              <InteractiveMap heightClass="h-64" />
+            </div>
+
+            {/* Geofence Simulation Button */}
+            <button
+              onClick={() => triggerSimulation(location.isHome ? 'missing_patient' : 'take_me_home')}
+              className={`w-full py-2.5 px-3 rounded-xl text-xs font-black transition active:scale-95 flex items-center justify-center gap-2 shadow-sm ${
+                location.isHome
+                  ? 'bg-[#C95C5C] hover:bg-red-700 text-white'
+                  : 'bg-[#5E9367] hover:bg-emerald-700 text-white'
+              }`}
+            >
+              <Navigation className="w-4 h-4" />
+              <span>{location.isHome ? 'Simulate Geofence Departure (1.8km Alert)' : 'Simulate Return Home (Safe Radius)'}</span>
+            </button>
+          </div>
+
+          {/* Safe Perimeter Info Card */}
+          <div className="bg-[#EEF4EC] rounded-2xl p-3 border border-[#A8C3A0]/60 space-y-1.5 text-xs text-[#26332F]">
+            <div className="flex items-center justify-between font-black text-[11px] text-[#356859]">
+              <span className="flex items-center gap-1">
+                <Home className="w-3.5 h-3.5 text-[#D88965]" />
+                <span>Configured Safe Zone</span>
+              </span>
+              <span className="bg-white/80 px-2 py-0.5 rounded-md text-[10px] font-bold text-[#356859]">400m Radius</span>
+            </div>
+            <p className="text-[10.5px] text-[#526861] leading-relaxed">
+              <strong>Guwahati Home:</strong> House #14, Brahmaputra View Lane, Silpukhuri. Fallback alerts trigger automatically when GPS leaves boundary for &gt;3 mins.
+            </p>
+          </div>
+
+          {/* Emergency Contacts Quick Dial */}
+          <div className="bg-white rounded-2xl p-3 border border-sand-200 shadow-sm space-y-2">
+            <div className="flex items-center justify-between text-[11px] font-black uppercase text-[#26332F]">
+              <span className="flex items-center gap-1">
+                <PhoneCall className="w-3.5 h-3.5 text-[#D88965]" />
+                <span>Emergency Fallback Contacts</span>
+              </span>
+              <span className="text-[9px] text-stone-500">Tier 1 & 2</span>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="p-2 bg-sand-50 rounded-xl border border-sand-200 flex items-center justify-between text-xs">
+                <div>
+                  <div className="font-extrabold text-stone-900 text-[11px]">Meera Devi (Daughter)</div>
+                  <div className="text-[10px] text-stone-500">+91 94350 12345 • Tier 1</div>
+                </div>
+                <a
+                  href="tel:9435012345"
+                  className="px-2.5 py-1 bg-[#356859] text-white rounded-lg text-[10px] font-bold flex items-center gap-1"
+                >
+                  <PhoneCall className="w-3 h-3" />
+                  <span>Call</span>
+                </a>
+              </div>
+
+              <div className="p-2 bg-sand-50 rounded-xl border border-sand-200 flex items-center justify-between text-xs">
+                <div>
+                  <div className="font-extrabold text-stone-900 text-[11px]">GMCH Guwahati Hospital</div>
+                  <div className="text-[10px] text-stone-500">3.2 km • 24x7 Emergency</div>
+                </div>
+                <span className="text-[9px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
+                  Tier 3 Facility
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* PAGE 3: PATIENT INFO, FEEDING TIMETABLE & DATA FEEDING STUDIO             */}
       {/* ========================================================================= */}
       {activeMobilePage === 'patient_info' && (
         <div className="space-y-3.5 animate-in fade-in">
