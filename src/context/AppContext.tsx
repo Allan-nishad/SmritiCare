@@ -599,7 +599,7 @@ const syncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in windo
   : null;
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [role, setRole] = useState<AppRole>('landing');
+  const [role, setRole] = useState<AppRole>('dual');
   const [language, setLanguage] = useState<LanguageCode>('en');
   const [patient] = useState<PatientProfile>(initialPatient);
   
